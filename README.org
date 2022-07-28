@@ -1,0 +1,4 @@
+#+TITLE: YACM - Yet Another Configuration Manager
+
+~yacm~ is another configuration manager for your systems that aims to be so
+simplistic it is almost useless.

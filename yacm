@@ -35,7 +35,7 @@ function main() {
 
   else
     # Invalid command, throw error and run help menu
-    echo "It appears you have entered an invalid command!";
+    echo $'It appears you have entered an invalid command!\n';
     help
   fi    
 }
@@ -68,7 +68,16 @@ function help() {
   IFS='' read -r -d '' msg << EOF
 Usage: yacm <command> [options...]
 
-Bob Blahlaw
+Configure your system(s) with any executable YOU design!
+
+Commands:
+  yacm bootstrap - Bootstrap the current system
+  yacm init      - Initalize a new profile for a system
+  yacm help      - Prints this menu
+  yacm version   - Prints current yacm version
+
+Global options (use before subcommands, if any):
+  --version      - Prints current yacm version
 EOF
   printf '%s\n' "$msg"
 }

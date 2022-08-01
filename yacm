@@ -1,5 +1,7 @@
 #!/bin/sh
 
+YACM_VERSION="0.0.1";
+
 YACM_BASE_DIR=;
 YACM_DIR=;
 YACM_PROFILES_DIR=;
@@ -30,12 +32,16 @@ function main() {
     help;
   elif [[ "$1" =~ $internal_commands ]]; then
     case "$1" in
+      bootstrap)
+        bootstrap $2;;
       help|--help)
         help;;
       init)
         init $2;;
       profile)
         profile $2;;
+      version|--version)
+        version;;
     esac
   else
     # Invalid command, throw error and run help menu
@@ -49,17 +55,38 @@ function help() {
   IFS='' read -r -d '' msg << EOF
 Configure your system(s) with any executable(s) YOU design!
 
-Usage: yacm <command> [options...]
+Usage: yacm <command> [subcommand]
 
 Commands:
   yacm bootstrap - Bootstrap the current system
   yacm init      - Initalize a new profile for a system
+  yacm profile   - Creates and manages system profiles
   yacm help      - Prints this menu
   yacm version   - Prints current yacm version
 
-Global options (use before subcommands, if any):
-  -help          - Prints this menu or the help menu for subcommands
-  -version       - Prints current yacm version
+Alternative commands:
+  --help         - Prints this menu
+  --version      - Prints current yacm version
+
+Global subcommands:
+  help           - Prints help menu for subcommand
+EOF
+  printf '%s\n' "$msg"
+}
+
+function bootstrap_help() {
+  local msg
+  IFS='' read -r -d '' msg << EOF
+Used to bootstrap the current system with the currently
+set profile or with the profile specified.
+
+Usage: yacm bootstrap [subcommand]
+
+Subcommands:
+  help   - Prints this menu
+
+Alternative subcommands:
+  --help - Prints this menu
 EOF
   printf '%s\n' "$msg"
 }
@@ -70,7 +97,7 @@ function init_help() {
 Used to create profile if none are present and
 set default profile for current system.
 
-Usage: yacm [global options] init
+Usage: yacm init [subcommand]
 
 Subcommands:
   help   - Prints this menu
@@ -86,7 +113,7 @@ function profile_help() {
   IFS='' read -r -d '' msg << EOF
 Used to create and manage yacm profiles
 
-Usage: yacm [global options] profile
+Usage: yacm profile [subcommand]
 
 Subcommands:
   create   - Creates a new profile
@@ -101,6 +128,20 @@ Alternative subcommands:
   --help   - Prints this menu
 EOF
   printf '%s\n' "$msg"
+}
+
+function bootstrap() {
+  if [[ -z $1 ]]; then
+    echo "Bootstrapping...";
+  else
+    case "$1" in
+      help|--help)
+        bootstrap_help;;
+      *)
+        echo -e "\e[31mUnrecognized subcommand for bootstrap command.\e[0m\n";
+        bootstrap_help;;
+    esac
+  fi
 }
 
 function init() {
@@ -136,7 +177,6 @@ function profile() {
           echo -e "\e[31mPleace run \e[32myacm init\e[31m!\e[0m";
         fi;;
       create|--create)
-        # TODO finish profile creation function
         echo -e "Creating new profile...\n";
         echo "What would you like this profile to be called?";
         read profile_name;
@@ -178,7 +218,13 @@ function profile() {
   fi
 }
 
+function version() {
+  echo "YACM: Yet Another Configuration Manager";
+  echo "Version: v$YACM_VERSION";
+}
+
 function profile_create() {
+  # TODO finish profile creation function
   touch $YACM_PROFILES_DIR/$1.yml;
   echo -e "Created \e[32m$1\e[0m profile!";
 }

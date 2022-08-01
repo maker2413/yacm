@@ -47,9 +47,9 @@ function main() {
 function help() {
   local msg
   IFS='' read -r -d '' msg << EOF
-Usage: yacm <command> [options...]
+Configure your system(s) with any executable(s) YOU design!
 
-Configure your system(s) with any executable YOU design!
+Usage: yacm <command> [options...]
 
 Commands:
   yacm bootstrap - Bootstrap the current system
@@ -67,10 +67,16 @@ EOF
 function init_help() {
   local msg
   IFS='' read -r -d '' msg << EOF
+Used to create profile if none are present and
+set default profile for current system.
+
 Usage: yacm [global options] init
 
 Subcommands:
-  help - Prints this menu
+  help   - Prints this menu
+
+Alternative subcommands:
+  --help - Prints this menu
 EOF
   printf '%s\n' "$msg"
 }
@@ -78,9 +84,9 @@ EOF
 function profile_help() {
   local msg
   IFS='' read -r -d '' msg << EOF
-Usage: yacm [global options] profile
-
 Used to create and manage yacm profiles
+
+Usage: yacm [global options] profile
 
 Subcommands:
   create   - Creates a new profile
@@ -98,7 +104,11 @@ EOF
 }
 
 function init() {
-  if [[ ! -z $1 ]]; then
+  if [[ -z $1 ]]; then
+    echo -e "Initializng yacm...\n";
+    profile create;
+    echo -e "\nFinished initializing yacm!";
+  else
     case "$1" in
       help|--help)
         init_help;;
@@ -131,13 +141,14 @@ function profile() {
         echo "What would you like this profile to be called?";
         read profile_name;
         if [[ ! -f "$YACM_PROFILES_DIR/$profile_name.yml" ]]; then
-          touch $YACM_PROFILES_DIR/$profile_name.yml;
+          profile_create $profile_name;
         else
           echo "Profile already exists!";
           read -p "Would you like to recreate it? (y/N)" yn
           case $yn in
             [Yy]*)
-              echo "yes";;
+              rm $YACM_PROFILES_DIR/$profile_name.yml;
+              profile_create $profile_name;;
             [Nn]*)
               echo "no";;
             "")
@@ -165,6 +176,11 @@ function profile() {
         profile_help;;
     esac
   fi
+}
+
+function profile_create() {
+  touch $YACM_PROFILES_DIR/$1.yml;
+  echo -e "Created \e[32m$1\e[0m profile!";
 }
 
 function set_global_args() {

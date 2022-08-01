@@ -2,6 +2,7 @@
 
 YACM_BASE_DIR=;
 YACM_DIR=;
+YACM_PROFILES_DIR=;
 
 function main() {
   # Capture full command, for passing to hooks
@@ -19,25 +20,151 @@ function main() {
   # Create the YACM_DIR & YACM_DATA if they doesn't exist yet
   [ -d "$YACM_BASE_DIR" ] || mkdir -p "$YACM_BASE_DIR"
   [ -d "$YACM_DIR" ] || mkdir -p "$YACM_DIR"
+  [ -d "$YACM_PROFILES_DIR" ] || mkdir -p "$YACM_PROFILES_DIR"
 
   local retval=0
-  internal_commands="^(bootstrap|help|--help|init|version|--version)$"
+  internal_commands="^(bootstrap|help|--help|init|profile|version|--version)$"
 
   if [ -z "$1" ] ; then
     # No argumnts will result in help()
     help;
   elif [[ "$1" =~ $internal_commands ]]; then
-    # For internal commands, process all of the arguments
-    YADM_COMMAND="${1//-/_}";
-    YADM_COMMAND="${YADM_COMMAND/__/}";
-    YADM_ARGS=();
-    shift;
-
+    case "$1" in
+      help|--help)
+        help;;
+      init)
+        init $2;;
+      profile)
+        profile $2;;
+    esac
   else
     # Invalid command, throw error and run help menu
-    echo $'It appears you have entered an invalid command!\n';
+    echo -e '\e[31mIt appears you have entered an invalid command!\e[0m\n';
     help
   fi    
+}
+
+function help() {
+  local msg
+  IFS='' read -r -d '' msg << EOF
+Usage: yacm <command> [options...]
+
+Configure your system(s) with any executable YOU design!
+
+Commands:
+  yacm bootstrap - Bootstrap the current system
+  yacm init      - Initalize a new profile for a system
+  yacm help      - Prints this menu
+  yacm version   - Prints current yacm version
+
+Global options (use before subcommands, if any):
+  -help          - Prints this menu or the help menu for subcommands
+  -version       - Prints current yacm version
+EOF
+  printf '%s\n' "$msg"
+}
+
+function init_help() {
+  local msg
+  IFS='' read -r -d '' msg << EOF
+Usage: yacm [global options] init
+
+Subcommands:
+  help - Prints this menu
+EOF
+  printf '%s\n' "$msg"
+}
+
+function profile_help() {
+  local msg
+  IFS='' read -r -d '' msg << EOF
+Usage: yacm [global options] profile
+
+Used to create and manage yacm profiles
+
+Subcommands:
+  create   - Creates a new profile
+  delete   - Deletes a profile
+  list     - List profiles on system
+  help     - Prints this menu
+
+Alternative subcommands:
+  --create - Creates a new profile
+  --delete - Deletes a profile
+  --list   - List profiles on system
+  --help   - Prints this menu
+EOF
+  printf '%s\n' "$msg"
+}
+
+function init() {
+  if [[ ! -z $1 ]]; then
+    case "$1" in
+      help|--help)
+        init_help;;
+      *)
+        echo -e "\e[31mUnrecognized subcommand for init command.\e[0m\n";
+        init_help;;
+    esac
+  fi
+}
+
+function profile() {
+  if [[ ! -z $1 ]]; then
+    case "$1" in
+      help|--help)
+        profile_help;;
+      list|--list)
+        if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
+          echo -e "Profiles:";
+          for file in $(ls $YACM_PROFILES_DIR/*.yml);
+          do
+            echo "  $(basename $file .yml)";
+          done
+        else
+          echo -e "\e[31mNo profiles present!\e[0m\n";
+          echo -e "\e[31mPleace run \e[32myacm init\e[31m!\e[0m";
+        fi;;
+      create|--create)
+        # TODO finish profile creation function
+        echo -e "Creating new profile...\n";
+        echo "What would you like this profile to be called?";
+        read profile_name;
+        if [[ ! -f "$YACM_PROFILES_DIR/$profile_name.yml" ]]; then
+          touch $YACM_PROFILES_DIR/$profile_name.yml;
+        else
+          echo "Profile already exists!";
+          read -p "Would you like to recreate it? (y/N)" yn
+          case $yn in
+            [Yy]*)
+              echo "yes";;
+            [Nn]*)
+              echo "no";;
+            "")
+              echo "no";;
+            *)
+              echo "Please answer yes or no.";;
+          esac
+        fi;;
+      delete|--delete)
+        if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
+          echo -e "Which profile would you like to delete?\n";
+          profile list
+          read profile_name;
+          if [[ -f $YACM_PROFILES_DIR/$profile_name.yml ]]; then
+            rm $YACM_PROFILES_DIR/$profile_name.yml;
+            echo -e "\nProfile \e[32m$profile_name\e[0m deleted!";
+          else
+            echo -e "\n\e[31mInvalid profile name!\e[0m"
+          fi
+        else
+          echo -e "\e[31mNo profiles currently exist!\e[0m"
+        fi;;
+      *)
+        echo -e "\e[31mUnrecognized subcommand for profile command.\e[0m\n";
+        profile_help;;
+    esac
+  fi
 }
 
 function set_global_args() {
@@ -62,26 +189,6 @@ function set_global_args() {
   done
 }
 
-function help() {
-
-  local msg
-  IFS='' read -r -d '' msg << EOF
-Usage: yacm <command> [options...]
-
-Configure your system(s) with any executable YOU design!
-
-Commands:
-  yacm bootstrap - Bootstrap the current system
-  yacm init      - Initalize a new profile for a system
-  yacm help      - Prints this menu
-  yacm version   - Prints current yacm version
-
-Global options (use before subcommands, if any):
-  --version      - Prints current yacm version
-EOF
-  printf '%s\n' "$msg"
-}
-
 function set_yacm_defaults() {
   # only set YACM_BASE_DIR if it hasn't already be set
   if [ -z $YACM_BASE_DIR ]; then
@@ -92,6 +199,11 @@ function set_yacm_defaults() {
   # only set YACM_DIR if it hasn't already be set
   if [ -z $YACM_DIR ]; then
     YACM_DIR="${YACM_BASE_DIR}/yacm";
+  fi
+
+  # only set YACM_PROFILES_DIR if it hasn't already be set
+  if [ -z $YACM_PROFILES_DIR ]; then
+    YACM_PROFILES_DIR="${YACM_DIR}/profiles";
   fi
 }
 

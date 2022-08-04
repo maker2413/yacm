@@ -55,23 +55,31 @@ function help() {
   IFS='' read -r -d '' msg << EOF
 Configure your system(s) with any executable(s) YOU design!
 
-Usage: yacm <command> [subcommand]
+Usage: yacm [global options] <command> [subcommand]
 
 Commands:
-  yacm bootstrap - Bootstrap the current system
-  yacm init      - Initalize a new profile for a system
-  yacm profile   - Creates and manages system profiles
-  yacm help      - Prints this menu
-  yacm version   - Prints current yacm version
+  yacm bootstrap      - Bootstrap the current system
+  yacm init           - Initalize a new profile for a system
+  yacm profile        - Creates and manages system profiles
+  yacm help           - Prints this menu
+  yacm version        - Prints current yacm version
 
 Alternative commands:
-  --help         - Prints this menu
-  --version      - Prints current yacm version
+  --help              - Prints this menu
+  --version           - Prints current yacm version
 
 Global subcommands:
-  help           - Prints help menu for subcommand
+  help                - Prints help menu for subcommand
+
+Global options (use these before the command, if any):
+  --yacm-base-dir     - Overrides the standard yacm dir
+                        default: {$HOME/.config}
+  --yacm-dir          - Overrides the standard yacm dir
+                        default: {$YACM_BASE_DIR/yacm}
+  --yacm-profiles-dir - Overrides the standard yacm dir
+                        default: {$YACM_DIR/profiles}
 EOF
-  printf '%s\n' "$msg"
+  printf '%s' "$msg"
 }
 
 function bootstrap_help() {
@@ -88,7 +96,7 @@ Subcommands:
 Alternative subcommands:
   --help - Prints this menu
 EOF
-  printf '%s\n' "$msg"
+  printf '%s' "$msg"
 }
 
 function init_help() {
@@ -105,7 +113,7 @@ Subcommands:
 Alternative subcommands:
   --help - Prints this menu
 EOF
-  printf '%s\n' "$msg"
+  printf '%s' "$msg"
 }
 
 function profile_help() {
@@ -127,14 +135,15 @@ Alternative subcommands:
   --list   - List profiles on system
   --help   - Prints this menu
 EOF
-  printf '%s\n' "$msg"
+  printf '%s' "$msg"
 }
 
 function bootstrap() {
-  if [[ -z $1 ]]; then
+  local subcommand=$1;
+  if [[ -z $subcommand ]]; then
     echo "Bootstrapping...";
   else
-    case "$1" in
+    case "$subcommand" in
       help|--help)
         bootstrap_help;;
       *)
@@ -145,12 +154,13 @@ function bootstrap() {
 }
 
 function init() {
-  if [[ -z $1 ]]; then
+  local subcommand=$1;
+  if [[ -z $subcommand ]]; then
     echo -e "Initializng yacm...\n";
     profile create;
     echo -e "\nFinished initializing yacm!";
   else
-    case "$1" in
+    case "$subcommand" in
       help|--help)
         init_help;;
       *)
@@ -161,8 +171,9 @@ function init() {
 }
 
 function profile() {
-  if [[ ! -z $1 ]]; then
-    case "$1" in
+  local subcommand=$1;
+  if [[ ! -z $subcommand ]]; then
+    case "$subcommand" in
       help|--help)
         profile_help;;
       list|--list)
@@ -184,7 +195,7 @@ function profile() {
           profile_create $profile_name;
         else
           echo "Profile already exists!";
-          read -p "Would you like to recreate it? (y/N)" yn
+          read -p "Would you like to recreate it? (y/N)" yn;
           case $yn in
             [Yy]*)
               rm $YACM_PROFILES_DIR/$profile_name.yml;
@@ -200,16 +211,16 @@ function profile() {
       delete|--delete)
         if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
           echo -e "Which profile would you like to delete?\n";
-          profile list
+          profile list;
           read profile_name;
           if [[ -f $YACM_PROFILES_DIR/$profile_name.yml ]]; then
             rm $YACM_PROFILES_DIR/$profile_name.yml;
             echo -e "\nProfile \e[32m$profile_name\e[0m deleted!";
           else
-            echo -e "\n\e[31mInvalid profile name!\e[0m"
+            echo -e "\n\e[31mInvalid profile name!\e[0m";
           fi
         else
-          echo -e "\e[31mNo profiles currently exist!\e[0m"
+          echo -e "\e[31mNo profiles currently exist!\e[0m";
         fi;;
       *)
         echo -e "\e[31mUnrecognized subcommand for profile command.\e[0m\n";
@@ -224,34 +235,59 @@ function version() {
 }
 
 function profile_create() {
+  local profile_name=$1;
   # TODO finish profile creation function
-  touch $YACM_PROFILES_DIR/$1.yml;
-  echo -e "Created \e[32m$1\e[0m profile!";
+  touch $YACM_PROFILES_DIR/$profile_name.yml;
+  echo -e "Created \e[32m$profile_name\e[0m profile!";
+}
+
+function qualify_path() {
+  local path="$1";
+  if [ "$path" = "." ]; then
+    path="$PWD";
+  elif [[ "$path" != /* ]]; then
+    path="$PWD/${path#./}";
+  fi
+  echo "$path";
 }
 
 function set_global_args() {
+  # TODO make this actually usable
   # global arguments are removed before the main processing is done
   MAIN_ARGS=()
   while [[ $# -gt 0 ]] ; do
     key="$1"
     case $key in
-      -Y|--yadm-dir) # override the standard YADM_DIR
-        YADM_DIR="$(qualify_path "$2" "yadm")"
-        shift
-      ;;
-      --yadm-base-dir) # override the standard YADM_BASE_DIR
-        YADM_BASE_DIR="$(qualify_path "$2" "data")"
-        shift
-      ;;
+      --yacm-dir) # override the standard YACM_DIR
+        if [ -z "$2" ]; then
+          echo -e "\e[31mWarning! You can't specify an empty \e[32myacm-dir\e[31m path\e[0m";
+          exit 1
+        fi
+        YACM_DIR="$(qualify_path "$2" "yacm-dir")"
+        shift;;
+      --yacm-base-dir) # override the standard YACM_BASE_DIR
+        if [ -z "$2" ]; then
+          echo -e "\e[31mWarning! You can't specify an empty \e[32myacm-base-dir\e[31m path\e[0m";
+          exit 1
+        fi
+        YACM_BASE_DIR="$(qualify_path "$2" "data")"
+        shift;;
+      --yacm-profiles-dir) # override the standard YACM_PROFILES_DIR
+        if [ -z "$2" ]; then
+          echo -e "\e[31mWarning! You can't specify an empty \e[32myacm-profiles-dir\e[31m path\e[0m";
+          exit 1
+        fi
+        YACM_PROFILES_DIR="$(qualify_path "$2")"
+        shift;;
       *) # main arguments are kept intact
-        MAIN_ARGS+=("$1")
-      ;;
+        MAIN_ARGS+=("$1");;
     esac
     shift
   done
 }
 
 function set_yacm_defaults() {
+  echo $YACM_DIR;
   # only set YACM_BASE_DIR if it hasn't already be set
   if [ -z $YACM_BASE_DIR ]; then
     local base_yacm_dir="${XDG_CONFIG_DIR:-$HOME/.config}";

@@ -39,7 +39,7 @@ function main() {
       init)
         init $2;;
       profile)
-        profile $2;;
+        profile $2 $3 ;;
       version|--version)
         version;;
     esac
@@ -51,7 +51,7 @@ function main() {
 }
 
 function help() {
-  local msg
+  local msg;
   IFS='' read -r -d '' msg << EOF
 Configure your system(s) with any executable(s) YOU design!
 
@@ -79,11 +79,11 @@ Global options (use these before the command, if any):
   --yacm-profiles-dir - Overrides the standard yacm dir
                         default: {$YACM_DIR/profiles}
 EOF
-  printf '%s' "$msg"
+  printf '%s' "$msg";
 }
 
 function bootstrap_help() {
-  local msg
+  local msg;
   IFS='' read -r -d '' msg << EOF
 Used to bootstrap the current system with the currently
 set profile or with the profile specified.
@@ -96,11 +96,11 @@ Subcommands:
 Alternative subcommands:
   --help - Prints this menu
 EOF
-  printf '%s' "$msg"
+  printf '%s' "$msg";
 }
 
 function init_help() {
-  local msg
+  local msg;
   IFS='' read -r -d '' msg << EOF
 Used to create profile if none are present and
 set default profile for current system.
@@ -113,15 +113,15 @@ Subcommands:
 Alternative subcommands:
   --help - Prints this menu
 EOF
-  printf '%s' "$msg"
+  printf '%s' "$msg";
 }
 
 function profile_help() {
-  local msg
+  local msg;
   IFS='' read -r -d '' msg << EOF
 Used to create and manage yacm profiles
 
-Usage: yacm profile [subcommand]
+Usage: yacm profile <subcommand> [profile name]
 
 Subcommands:
   create   - Creates a new profile
@@ -135,7 +135,7 @@ Alternative subcommands:
   --list   - List profiles on system
   --help   - Prints this menu
 EOF
-  printf '%s' "$msg"
+  printf '%s' "$msg";
 }
 
 function bootstrap() {
@@ -178,7 +178,7 @@ function profile() {
         profile_help;;
       list|--list)
         if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
-          echo -e "Profiles:";
+          echo "Profiles:";
           for file in $(ls $YACM_PROFILES_DIR/*.yml);
           do
             echo "  $(basename $file .yml)";
@@ -189,8 +189,13 @@ function profile() {
         fi;;
       create|--create)
         echo -e "Creating new profile...\n";
-        echo "What would you like this profile to be called?";
-        read profile_name;
+        if [ -z $2 ]; then
+          echo "What would you like this profile to be called?";
+          read profile_name;
+        else
+          profile_name=$2;
+        fi
+
         if [[ ! -f "$YACM_PROFILES_DIR/$profile_name.yml" ]]; then
           profile_create $profile_name;
         else
@@ -210,14 +215,20 @@ function profile() {
         fi;;
       delete|--delete)
         if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
-          echo -e "Which profile would you like to delete?\n";
-          profile list;
-          read profile_name;
+          if [ -z $2 ]; then
+            echo -e "Which profile would you like to delete?\n";
+            profile list;
+            read profile_name;
+            echo "";
+          else
+            profile_name=$2;
+          fi
+
           if [[ -f $YACM_PROFILES_DIR/$profile_name.yml ]]; then
             rm $YACM_PROFILES_DIR/$profile_name.yml;
-            echo -e "\nProfile \e[32m$profile_name\e[0m deleted!";
+            echo -e "Profile \e[32m$profile_name\e[0m deleted!";
           else
-            echo -e "\n\e[31mInvalid profile name!\e[0m";
+            echo -e "\e[31mInvalid profile name!\e[0m";
           fi
         else
           echo -e "\e[31mNo profiles currently exist!\e[0m";
@@ -226,6 +237,8 @@ function profile() {
         echo -e "\e[31mUnrecognized subcommand for profile command.\e[0m\n";
         profile_help;;
     esac
+  else
+    profile_help;
   fi
 }
 
@@ -236,9 +249,146 @@ function version() {
 
 function profile_create() {
   local profile_name=$1;
-  # TODO finish profile creation function
-  touch $YACM_PROFILES_DIR/$profile_name.yml;
+
+  local init_system="";
+  local package_manager="";
+  local packages="";
+
+  while [[ -z $host_name ]]; do
+    echo "";
+    read -p 'What will the hostname of this device be?: ' host_name;
+    if [[ -z $host_name ]]; then
+      echo "Please provide a hostname.";
+    fi
+  done
+
+  select_package_manager package_manager;
+
+  select_packages packages;
+
+  select_init_system init_system;
+
+  select_services services;
+
+  cat >$YACM_PROFILES_DIR/$profile_name.yml <<EOF
+---
+name: ${profile_name}
+hostname: ${host_name}
+
+# Here you can define any custom made executable scripts
+# that you would like to have run before moving on to
+# package installation.
+# initial_scripts:
+
+package_manager: ${package_manager}
+packages:${packages}
+
+# Here you can define any custom made executable scripts
+# that you would like to have run before moving on to
+# enabling services.
+# midway_scripts:
+
+init_system: ${init_system}
+services:${services}
+
+# Here you can define any custom made executable scripts
+# that you would like to have run as a final bootstrap
+# step.
+# final_scripts:
+EOF
   echo -e "Created \e[32m$profile_name\e[0m profile!";
+}
+
+function select_package_manager() {
+  local __package_manager=$1;
+
+  while [[ -z $selected_package_manager ]]; do
+    echo -e "\nyacm currently supports the following package managers:";
+    echo "  1) apk";
+    echo "  2) apt";
+    echo "  3) dnf";
+    echo "  4) pacman";
+    echo "  5) paru";
+    echo "  6) yum";
+    read -p "Which package manager would you like to use?: " prompt;
+    case $prompt in
+      "1"|"apk")
+        local selected_package_manager="apk";;
+      "2"|"apt")
+        local selected_package_manager="apt";;
+      "3"|"dnf")
+        local selected_package_manager="dnf";;
+      "4"|"pacman")
+        local selected_package_manager="pacman";;
+      "5"|"paru")
+        local selected_package_manager="paru";;
+      "6"|"yum")
+        local selected_package_manager="yum";;
+      *)
+        echo -e "\e[31mPlease select a supported package manager\e[0m";;
+    esac
+  done
+
+  eval $__package_manager="'$selected_package_manager'";
+}
+
+function select_packages() {
+  local __packages=$1;
+  local package_list="";
+
+  echo "";
+  read -p "Please type the package you would like to install or type done to finish: " prompt;
+
+  while [[ $prompt != "done" ]]; do
+    if [[ ! -z $prompt ]]; then
+      package_list="$package_list
+  - $prompt";
+    fi
+
+    read -p "Addtional packages (type done to finsh): " prompt;
+  done
+
+  eval $__packages="'$package_list'";
+}
+
+function select_init_system() {
+  local __init_system=$1;
+
+  while [[ -z $selected_init_system ]]; do
+    echo -e "\nyacm currently supports the following init system";
+    echo "  1) systemd";
+    echo "  2) runit";
+    read -p "Which init system would you like to use?: " prompt;
+    case $prompt in
+      "1"|"systemd")
+        selected_init_system="systemd";;
+      "2"|"runit")
+        selected_init_system="runit";;
+      *)
+        echo -e "\e[31mPlease select a supported init system\e[0m";;
+    esac
+  done
+
+  eval $__init_system="'$selected_init_system'";
+}
+
+function select_services() {
+  local __services=$1;
+  local service_list="";
+
+  echo "";
+  read -p "Please type the name of a service you would like to enable or type done to finish: " prompt;
+
+  while [[ $prompt != "done" ]]; do
+    if [[ ! -z $prompt ]]; then
+      service_list="$service_list
+  - $prompt";
+    fi
+
+    read -p "Addtional services (type done to finsh): " prompt;
+  done
+
+  eval $__services="'$service_list'";
 }
 
 function qualify_path() {
@@ -252,7 +402,6 @@ function qualify_path() {
 }
 
 function set_global_args() {
-  # TODO make this actually usable
   # global arguments are removed before the main processing is done
   MAIN_ARGS=()
   while [[ $# -gt 0 ]] ; do
@@ -287,7 +436,6 @@ function set_global_args() {
 }
 
 function set_yacm_defaults() {
-  echo $YACM_DIR;
   # only set YACM_BASE_DIR if it hasn't already be set
   if [ -z $YACM_BASE_DIR ]; then
     local base_yacm_dir="${XDG_CONFIG_DIR:-$HOME/.config}";

@@ -125,6 +125,7 @@ Usage: yacm profile <subcommand> [profile name]
 
 Subcommands:
   create   - Creates a new profile
+  default  - Sets default profile for current system
   delete   - Deletes a profile
   list     - List profiles on system
   help     - Prints this menu
@@ -132,8 +133,8 @@ Subcommands:
 Alternative subcommands:
   --create - Creates a new profile
   --delete - Deletes a profile
-  --list   - List profiles on system
-  --help   - Prints this menu
+  -l       - List profiles on system
+  -h       - Prints this menu
 EOF
   printf '%s' "$msg";
 }
@@ -157,7 +158,22 @@ function init() {
   local subcommand=$1;
   if [[ -z $subcommand ]]; then
     echo -e "Initializng yacm...\n";
-    profile create;
+    if [ ! "$(ls -A $YACM_PROFILES_DIR)" ]; then
+      profile create;
+      read -p "Would you like to make this profile the default for this system? (Y/n)" yn;
+      case $yn in
+        [Yy]*)
+          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/current_profile;;
+        [Nn]*)
+          echo -e "To set a profile as default later please run: \e[32m yacm profile default\e[0m";;
+        "")
+          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/current_profile;;
+        *)
+          echo "Please answer yes or no.";;
+      esac
+    else
+      profile default;
+    fi
     echo -e "\nFinished initializing yacm!";
   else
     case "$subcommand" in
@@ -174,9 +190,9 @@ function profile() {
   local subcommand=$1;
   if [[ ! -z $subcommand ]]; then
     case "$subcommand" in
-      help|--help)
+      help|-h)
         profile_help;;
-      list|--list)
+      list|-l)
         if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
           echo "Profiles:";
           for file in $(ls $YACM_PROFILES_DIR/*.yml);
@@ -206,12 +222,35 @@ function profile() {
               rm $YACM_PROFILES_DIR/$profile_name.yml;
               profile_create $profile_name;;
             [Nn]*)
-              echo "no";;
+              echo -e "\nCancelled profile creation";;
             "")
-              echo "no";;
+              echo "\nCancelled profile creation";;
             *)
               echo "Please answer yes or no.";;
           esac
+        fi;;
+      default)
+        local selected_profile=$2;
+        if [[ ! -z $selected_profile ]]; then
+          if [[ -f "$YACM_PROFILES_DIR/$selected_profile.yml" ]]; then
+            echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/current_profile;
+            echo -e "\nSuccessfully set default profile to \e[32m$selected_profile\e[0m!";
+          else
+            echo -e "\n\e[31mPlease specify an existing profile\e[0m";
+          fi
+        else
+          while [[ -z $selected_profile ]]; do
+            echo -e "Which of the following profiles would you like to set as default for this system?\n";
+            profile list;
+            echo "";
+            read -p "Default: " prompt;
+            if [[ -f "$YACM_PROFILES_DIR/$prompt.yml" ]]; then
+              selected_profile=$prompt;
+              echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/current_profile;
+            else
+              echo -e "\n\e[31mPlease specify an existing profile\e[0m\n";
+            fi
+          done
         fi;;
       delete|--delete)
         if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
@@ -296,7 +335,7 @@ services:${services}
 # step.
 # final_scripts:
 EOF
-  echo -e "Created \e[32m$profile_name\e[0m profile!";
+  echo -e "\nCreated \e[32m$profile_name\e[0m profile!";
 }
 
 function select_package_manager() {

@@ -316,15 +316,19 @@ function set_hostname() {
   echo -e "\nSetting hostname to \e[32m$1\e[0m.";
 }
 
+function install_packages() {
+  # TODO make this work
+  echo -e "\npackage manager: $1";
+  echo -e "packages: $2";
+}
+
 function bootstrap_system() {
   local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   set_hostname $hostname;
 
   local package_manager="$(sed -n -e '/^package_manager:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
-  echo -e "package manager: $package_manager";
-
-  local packages="$(sed -n -e '/^package_manager:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
-  echo -e "packages: $packages";
+  local packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n')";
+  install_packages $package_manager $packages;
 }
 
 function profile_create() {

@@ -5,6 +5,7 @@ YACM_VERSION="0.0.1";
 YACM_BASE_DIR=;
 YACM_DIR=;
 YACM_PROFILES_DIR=;
+YACM_SCRIPTS_DIR=;
 
 function main() {
   # Capture full command, for passing to hooks
@@ -23,6 +24,7 @@ function main() {
   [ -d "$YACM_BASE_DIR" ] || mkdir -p "$YACM_BASE_DIR"
   [ -d "$YACM_DIR" ] || mkdir -p "$YACM_DIR"
   [ -d "$YACM_PROFILES_DIR" ] || mkdir -p "$YACM_PROFILES_DIR"
+  [ -d "$YACM_SCRIPTS_DIR" ] || mkdir -p "$YACM_SCRIPTS_DIR"
 
   internal_commands="^(bootstrap|help|-h|--help|init|profile|version|-v|--version)$"
 
@@ -318,17 +320,84 @@ function set_hostname() {
 
 function install_packages() {
   # TODO make this work
-  echo -e "\npackage manager: $1";
-  echo -e "packages: $2";
+  local __package_manager=$1;
+  local __packages=$2;
+
+  case $__package_manager in
+    apk)
+      echo "apk";;
+    apt)
+      echo "sudo apt update && sudo apt install $__packages";;
+    dnf)
+      echo "dnf";;
+    pacman)
+      echo "sudo pacman -Sy $__packages --noconfirm --needed";;
+    paru)
+      echo "paru -Sy $__packages --noconfirm --needed";;
+    yum)
+      echo "yum";;
+    *)
+      echo -e "\e[31mUnsupported package manager defined!\e[0m";
+      print_supported_package_managers;;
+  esac
+}
+
+function enable_services() {
+  # TODO make this work
+  local __init_system=$1;
+  local __services=$2;
+
+  case $__init_system in
+    systemd)
+      echo "sudo systemctl enable $__services";;
+    runit)
+      echo "runit";;
+    *)
+      echo -e "\e[31mUnsupported init_system defined!\e[0m";
+      print_supported_init_systems;;
+  esac
+}
+
+function run_script() {
+  if [[ -f $YACM_SCRIPTS_DIR/$1 ]]; then
+    echo -e "Executing: \e[32m$YACM_SCRIPTS_DIR/$1\e[0m...";
+    $YACM_SCRIPTS_DIR/$1;
+  else
+    echo -e "\e[31mError: \e[32m$YACM_SCRIPTS_DIR/$1\e[31m not found!\e[0m";
+  fi
 }
 
 function bootstrap_system() {
   local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   set_hostname $hostname;
 
+  echo -e "\nRunning initial scripts if specified:";
+  local initial_scripts="$(awk '/^[^ ]/{ f=/^initial_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
+  for script in $initial_scripts; do
+    run_script $script;
+  done
+
+  echo -e "\nInstalling specified packages with specified package manager:";
   local package_manager="$(sed -n -e '/^package_manager:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
-  local packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n')";
-  install_packages $package_manager $packages;
+  local packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
+  install_packages $package_manager "$packages";
+
+  echo -e "\nRunning midway scripts if specified:";
+  local midway_scripts="$(awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
+  for script in $midway_scripts; do
+    run_script $script;
+  done
+
+  echo -e "\nEnabling specified services with specified init system:";
+  local init_system="$(sed -n -e '/^init_system:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
+  local services="$(awk '/^[^ ]/{ f=/^services:/; next } f{ print services, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
+  enable_services $init_system "$services";
+
+  echo -e "\nRunning final scripts if specified:";
+  local final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
+  for script in $final_scripts; do
+    run_script $script;
+  done
 }
 
 function profile_create() {
@@ -383,17 +452,21 @@ EOF
   echo -e "\nCreated \e[32m$profile_name\e[0m profile!";
 }
 
+function print_supported_package_managers() {
+  echo -e "\nyacm currently supports the following package managers:";
+  echo "  1) apk";
+  echo "  2) apt";
+  echo "  3) dnf";
+  echo "  4) pacman";
+  echo "  5) paru";
+  echo "  6) yum";
+}
+
 function select_package_manager() {
   local __package_manager=$1;
 
   while [[ -z $selected_package_manager ]]; do
-    echo -e "\nyacm currently supports the following package managers:";
-    echo "  1) apk";
-    echo "  2) apt";
-    echo "  3) dnf";
-    echo "  4) pacman";
-    echo "  5) paru";
-    echo "  6) yum";
+    print_supported_package_managers;
     read -p "Which package manager would you like to use?: " prompt;
     case $prompt in
       "1"|"apk")
@@ -435,13 +508,17 @@ function select_packages() {
   eval $__packages="'$package_list'";
 }
 
+function print_supported_init_systems() {
+  echo -e "\nyacm currently supports the following init system";
+  echo "  1) systemd";
+  echo "  2) runit";
+}
+
 function select_init_system() {
   local __init_system=$1;
 
   while [[ -z $selected_init_system ]]; do
-    echo -e "\nyacm currently supports the following init system";
-    echo "  1) systemd";
-    echo "  2) runit";
+    print_supported_init_system;
     read -p "Which init system would you like to use?: " prompt;
     case $prompt in
       "1"|"systemd")
@@ -512,6 +589,13 @@ function set_global_args() {
         fi
         YACM_PROFILES_DIR="$(qualify_path "$2")"
         shift;;
+      --yacm-scripts-dir) # override the standard YACM_SCRIPTS_DIR
+        if [ -z "$2" ]; then
+          echo -e "\e[31mWarning! You can't specify an empty \e[32myacm-scripts-dir\e[31m path\e[0m";
+          exit 1
+        fi
+        YACM_SCRIPTS_DIR="$(qualify_path "$2")"
+        shift;;
       *) # main arguments are kept intact
         MAIN_ARGS+=("$1");;
     esac
@@ -534,6 +618,11 @@ function set_yacm_defaults() {
   # only set YACM_PROFILES_DIR if it hasn't already be set
   if [ -z $YACM_PROFILES_DIR ]; then
     YACM_PROFILES_DIR="${YACM_DIR}/profiles";
+  fi
+
+  # only set YACM_SCRIPTS_DIR if it hasn't already be set
+  if [ -z $YACM_SCRIPTS_DIR ]; then
+    YACM_SCRIPTS_DIR="${YACM_DIR}/scripts";
   fi
 }
 

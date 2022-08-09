@@ -24,8 +24,7 @@ function main() {
   [ -d "$YACM_DIR" ] || mkdir -p "$YACM_DIR"
   [ -d "$YACM_PROFILES_DIR" ] || mkdir -p "$YACM_PROFILES_DIR"
 
-  local retval=0
-  internal_commands="^(bootstrap|help|--help|init|profile|version|--version)$"
+  internal_commands="^(bootstrap|help|-h|--help|init|profile|version|-v|--version)$"
 
   if [ -z "$1" ] ; then
     # No argumnts will result in help()
@@ -33,14 +32,14 @@ function main() {
   elif [[ "$1" =~ $internal_commands ]]; then
     case "$1" in
       bootstrap)
-        bootstrap $2;;
-      help|--help)
+        bootstrap $2 $3;;
+      help|-h|--help)
         help;;
       init)
         init $2;;
       profile)
         profile $2 $3 ;;
-      version|--version)
+      version|-v|--version)
         version;;
     esac
   else
@@ -67,6 +66,8 @@ Commands:
 Alternative commands:
   --help              - Prints this menu
   --version           - Prints current yacm version
+  -h                  - Prints this menu
+  -v                  - Prints current yacm version
 
 Global subcommands:
   help                - Prints help menu for subcommand
@@ -91,10 +92,12 @@ set profile or with the profile specified.
 Usage: yacm bootstrap [subcommand]
 
 Subcommands:
-  help   - Prints this menu
+  help    - Prints this menu
+  profile - Used to specify which profile to use
 
 Alternative subcommands:
-  --help - Prints this menu
+  --help  - Prints this menu
+  -h      - Prints this menu
 EOF
   printf '%s' "$msg";
 }
@@ -112,6 +115,7 @@ Subcommands:
 
 Alternative subcommands:
   --help - Prints this menu
+  -h     - Prints this menu
 EOF
   printf '%s' "$msg";
 }
@@ -124,17 +128,17 @@ Used to create and manage yacm profiles
 Usage: yacm profile <subcommand> [profile name]
 
 Subcommands:
-  create   - Creates a new profile
-  default  - Sets default profile for current system
-  delete   - Deletes a profile
-  list     - List profiles on system
-  help     - Prints this menu
+  create  - Creates a new profile
+  default - Sets default profile for current system
+  delete  - Deletes a profile
+  list    - List profiles on system
+  help    - Prints this menu
 
 Alternative subcommands:
-  --create - Creates a new profile
-  --delete - Deletes a profile
-  -l       - List profiles on system
-  -h       - Prints this menu
+  --help  - Prints this menu
+  --rm    - Deletes a profile
+  -h      - Prints this menu
+  -l      - List profiles on system
 EOF
   printf '%s' "$msg";
 }
@@ -142,11 +146,29 @@ EOF
 function bootstrap() {
   local subcommand=$1;
   if [[ -z $subcommand ]]; then
-    echo "Bootstrapping...";
+    echo "Checking current default profile...";
+    local default_profile="$(cat $YACM_DIR/default_profile 2>/dev/null)";
+    if [[ -f $YACM_PROFILES_DIR/$default_profile.yml ]]; then
+      echo -e "\nBootstrapping system with profile: \e[32m$default_profile\e[0m...";
+      bootstrap_system $default_profile
+    else
+      echo -e "\n\e[31mNo default profile currently set!.\e[0m";
+      echo -e "Please run: \e[32myacm profile default\e[0m to set default for this system or";
+      echo -e "run: \e[32myacm bootstrap profile [profile_name]\e[0m to specify which profile to use.";
+    fi
   else
     case "$subcommand" in
-      help|--help)
+      help|-h|--help)
         bootstrap_help;;
+      profile)
+        if [[ -f $YACM_PROFILES_DIR/$2.yml ]]; then
+          echo -e "Bootstrapping system with profile: \e[32m$2\e[0m...";
+          bootstrap_system $2;
+        else
+          echo -e "\e[31mERROR: provided profile doesn't exist!.\e[0m";
+          echo "Please specify a profile that exists.";
+          echo -e "To see profiles that exists run: \e[32m yacm profile list\e[0m.";
+        fi;;
       *)
         echo -e "\e[31mUnrecognized subcommand for bootstrap command.\e[0m\n";
         bootstrap_help;;
@@ -163,11 +185,11 @@ function init() {
       read -p "Would you like to make this profile the default for this system? (Y/n)" yn;
       case $yn in
         [Yy]*)
-          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/current_profile;;
+          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;;
         [Nn]*)
           echo -e "To set a profile as default later please run: \e[32m yacm profile default\e[0m";;
         "")
-          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/current_profile;;
+          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;;
         *)
           echo "Please answer yes or no.";;
       esac
@@ -177,7 +199,7 @@ function init() {
     echo -e "\nFinished initializing yacm!";
   else
     case "$subcommand" in
-      help|--help)
+      help|-h|--help)
         init_help;;
       *)
         echo -e "\e[31mUnrecognized subcommand for init command.\e[0m\n";
@@ -190,7 +212,7 @@ function profile() {
   local subcommand=$1;
   if [[ ! -z $subcommand ]]; then
     case "$subcommand" in
-      help|-h)
+      help|-h|--help)
         profile_help;;
       list|-l)
         if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
@@ -233,10 +255,12 @@ function profile() {
         local selected_profile=$2;
         if [[ ! -z $selected_profile ]]; then
           if [[ -f "$YACM_PROFILES_DIR/$selected_profile.yml" ]]; then
-            echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/current_profile;
+            echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/default_profile;
             echo -e "\nSuccessfully set default profile to \e[32m$selected_profile\e[0m!";
           else
-            echo -e "\n\e[31mPlease specify an existing profile\e[0m";
+            echo -e "\e[31mERROR: provided profile doesn't exist!.\e[0m";
+            echo "Please specify a profile that exists.";
+            echo -e "To see profiles that exists run: \e[32m yacm profile list\e[0m.";
           fi
         else
           while [[ -z $selected_profile ]]; do
@@ -246,7 +270,8 @@ function profile() {
             read -p "Default: " prompt;
             if [[ -f "$YACM_PROFILES_DIR/$prompt.yml" ]]; then
               selected_profile=$prompt;
-              echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/current_profile;
+              echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/default_profile;
+              echo -e "Profile \e[32m$selected_profile\e[0m set as default.";
             else
               echo -e "\n\e[31mPlease specify an existing profile\e[0m\n";
             fi
@@ -284,6 +309,22 @@ function profile() {
 function version() {
   echo "YACM: Yet Another Configuration Manager";
   echo "Version: v$YACM_VERSION";
+}
+
+function set_hostname() {
+  # TODO make this work
+  echo -e "\nSetting hostname to \e[32m$1\e[0m.";
+}
+
+function bootstrap_system() {
+  local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
+  set_hostname $hostname;
+
+  local package_manager="$(sed -n -e '/^package_manager:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
+  echo -e "package manager: $package_manager";
+
+  local packages="$(sed -n -e '/^package_manager:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
+  echo -e "packages: $packages";
 }
 
 function profile_create() {

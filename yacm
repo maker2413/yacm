@@ -314,8 +314,9 @@ function version() {
 }
 
 function set_hostname() {
-  # TODO make this work
-  echo -e "\nSetting hostname to \e[32m$1\e[0m.";
+  local __hostname=$1;
+  echo -e "\nSetting hostname to: \e[32m$__hostname\e[0m...";
+  sudo sh -c "echo $__hostname > /etc/hostname";
 }
 
 function install_packages() {
@@ -323,23 +324,27 @@ function install_packages() {
   local __package_manager=$1;
   local __packages=$2;
 
-  case $__package_manager in
-    apk)
-      echo "apk";;
-    apt)
-      echo "sudo apt update && sudo apt install $__packages";;
-    dnf)
-      echo "dnf";;
-    pacman)
-      echo "sudo pacman -Sy $__packages --noconfirm --needed";;
-    paru)
-      echo "paru -Sy $__packages --noconfirm --needed";;
-    yum)
-      echo "yum";;
-    *)
-      echo -e "\e[31mUnsupported package manager defined!\e[0m";
-      print_supported_package_managers;;
-  esac
+  if [[ ! -z $__packages ]]; then
+    case $__package_manager in
+      apk)
+        echo "apk";;
+      apt)
+        echo "sudo apt update && sudo apt install $__packages";;
+      dnf)
+        echo "dnf";;
+      pacman)
+        sudo pacman -Sy $__packages --noconfirm --needed;;
+      paru)
+        paru -Sy $__packages --noconfirm --needed --skipreview;;
+      yum)
+        echo "yum";;
+      *)
+        echo -e "\e[31mUnsupported package manager defined!\e[0m";
+        print_supported_package_managers;;
+    esac
+  else
+    echo "No packages provided. Skipping over package installation...";
+  fi
 }
 
 function enable_services() {
@@ -347,15 +352,19 @@ function enable_services() {
   local __init_system=$1;
   local __services=$2;
 
-  case $__init_system in
-    systemd)
-      echo "sudo systemctl enable $__services";;
-    runit)
-      echo "runit";;
-    *)
-      echo -e "\e[31mUnsupported init_system defined!\e[0m";
-      print_supported_init_systems;;
-  esac
+  if [[ ! -z $__services ]]; then
+    case $__init_system in
+      systemd)
+        sudo systemctl enable $__services;;
+      runit)
+        echo "runit";;
+      *)
+        echo -e "\e[31mUnsupported init_system defined!\e[0m";
+        print_supported_init_systems;;
+    esac
+  else
+    echo "No systems specified. Skipping over enabling services...";
+  fi
 }
 
 function run_script() {
@@ -518,7 +527,7 @@ function select_init_system() {
   local __init_system=$1;
 
   while [[ -z $selected_init_system ]]; do
-    print_supported_init_system;
+    print_supported_init_systems;
     read -p "Which init system would you like to use?: " prompt;
     case $prompt in
       "1"|"systemd")

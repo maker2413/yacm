@@ -219,8 +219,7 @@ function profile() {
       list|-l)
         if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
           echo "Profiles:";
-          for file in $(ls $YACM_PROFILES_DIR/*.yml);
-          do
+          for file in $(ls $YACM_PROFILES_DIR/*.yml); do
             echo "  $(basename $file .yml)";
           done
         else
@@ -355,7 +354,12 @@ function enable_services() {
       systemd)
         sudo systemctl enable $__services;;
       runit)
-        echo "runit";;
+        for service in $__services; do
+          if [ ! -L /run/runit/service/$service ]; then
+            echo -e "Enabling service: $service.";
+            sudo ln -s /etc/runit/sv/$service /run/runit/service/$service;
+          fi
+        done;;
       *)
         echo -e "\e[31mUnsupported init_system defined!\e[0m";
         print_supported_init_systems;;
@@ -411,6 +415,7 @@ function bootstrap_system() {
 }
 
 function profile_create() {
+  #TODO prompt for default
   local profile_name=$1;
 
   local init_system="";

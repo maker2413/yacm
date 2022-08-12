@@ -329,13 +329,13 @@ function install_packages() {
       apt)
         sudo apt update && sudo apt --yes install $__packages;;
       dnf)
-        echo "dnf";;
+        sudo dnf install -y $__packages;;
       pacman)
         sudo pacman -Sy $__packages --noconfirm --needed;;
       paru)
         paru -Sy $__packages --noconfirm --needed --skipreview;;
       yum)
-        echo "yum";;
+        sudo yum install -y $__packages;;
       *)
         echo -e "\e[31mUnsupported package manager defined!\e[0m";
         print_supported_package_managers;;
@@ -378,6 +378,7 @@ function bootstrap_system() {
   local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   set_hostname $hostname;
 
+  #TODO print if none specified
   echo -e "\nRunning initial scripts if specified:";
   local initial_scripts="$(awk '/^[^ ]/{ f=/^initial_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
   for script in $initial_scripts; do
@@ -389,6 +390,7 @@ function bootstrap_system() {
   local packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
   install_packages $package_manager "$packages";
 
+  #TODO print if none specified
   echo -e "\nRunning midway scripts if specified:";
   local midway_scripts="$(awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
   for script in $midway_scripts; do
@@ -400,6 +402,7 @@ function bootstrap_system() {
   local services="$(awk '/^[^ ]/{ f=/^services:/; next } f{ print services, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
   enable_services $init_system "$services";
 
+  #TODO print if none specified
   echo -e "\nRunning final scripts if specified:";
   local final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
   for script in $final_scripts; do

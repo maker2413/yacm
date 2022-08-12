@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 YACM_VERSION="0.0.1";
 
@@ -326,10 +326,8 @@ function install_packages() {
 
   if [[ ! -z $__packages ]]; then
     case $__package_manager in
-      apk)
-        echo "apk";;
       apt)
-        echo "sudo apt update && sudo apt install $__packages";;
+        sudo apt update && sudo apt --yes install $__packages;;
       dnf)
         echo "dnf";;
       pacman)
@@ -363,7 +361,7 @@ function enable_services() {
         print_supported_init_systems;;
     esac
   else
-    echo "No systems specified. Skipping over enabling services...";
+    echo "No services specified. Skipping over enabling services...";
   fi
 }
 
@@ -463,12 +461,11 @@ EOF
 
 function print_supported_package_managers() {
   echo -e "\nyacm currently supports the following package managers:";
-  echo "  1) apk";
-  echo "  2) apt";
-  echo "  3) dnf";
-  echo "  4) pacman";
-  echo "  5) paru";
-  echo "  6) yum";
+  echo "  1) apt";
+  echo "  2) dnf";
+  echo "  3) pacman";
+  echo "  4) paru";
+  echo "  5) yum";
 }
 
 function select_package_manager() {
@@ -478,17 +475,15 @@ function select_package_manager() {
     print_supported_package_managers;
     read -p "Which package manager would you like to use?: " prompt;
     case $prompt in
-      "1"|"apk")
-        local selected_package_manager="apk";;
-      "2"|"apt")
+      "1"|"apt")
         local selected_package_manager="apt";;
-      "3"|"dnf")
+      "2"|"dnf")
         local selected_package_manager="dnf";;
-      "4"|"pacman")
+      "3"|"pacman")
         local selected_package_manager="pacman";;
-      "5"|"paru")
+      "4"|"paru")
         local selected_package_manager="paru";;
-      "6"|"yum")
+      "5"|"yum")
         local selected_package_manager="yum";;
       *)
         echo -e "\e[31mPlease select a supported package manager\e[0m";;

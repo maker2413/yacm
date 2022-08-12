@@ -291,6 +291,9 @@ function profile() {
 
           if [[ -f $YACM_PROFILES_DIR/$profile_name.yml ]]; then
             rm $YACM_PROFILES_DIR/$profile_name.yml;
+            if [[ $(cat $YACM_DIR/default_profile) == $profile_name ]]; then
+              rm $YACM_DIR/default_profile;
+            fi
             echo -e "Profile \e[32m$profile_name\e[0m deleted!";
           else
             echo -e "\e[31mInvalid profile name!\e[0m";
@@ -319,7 +322,6 @@ function set_hostname() {
 }
 
 function install_packages() {
-  # TODO make this work
   local __package_manager=$1;
   local __packages=$2;
 
@@ -345,7 +347,6 @@ function install_packages() {
 }
 
 function enable_services() {
-  # TODO make this work
   local __init_system=$1;
   local __services=$2;
 
@@ -382,40 +383,48 @@ function bootstrap_system() {
   local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   set_hostname $hostname;
 
-  #TODO print if none specified
   echo -e "\nRunning initial scripts if specified:";
   local initial_scripts="$(awk '/^[^ ]/{ f=/^initial_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
-  for script in $initial_scripts; do
-    run_script $script;
-  done
+  if [[ ! -z $initial_scripts ]]; then
+    for script in $initial_scripts; do
+      run_script $script;
+    done
+  else
+    echo "No initial_scripts defined. Skipping...";
+  fi
 
   echo -e "\nInstalling specified packages with specified package manager:";
   local package_manager="$(sed -n -e '/^package_manager:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   local packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
   install_packages $package_manager "$packages";
 
-  #TODO print if none specified
   echo -e "\nRunning midway scripts if specified:";
   local midway_scripts="$(awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
-  for script in $midway_scripts; do
-    run_script $script;
-  done
+  if [[ ! -z $midway_scripts ]]; then
+    for script in $midway_scripts; do
+      run_script $script;
+    done
+  else
+    echo "No midway_scripts defined. Skipping...";
+  fi
 
   echo -e "\nEnabling specified services with specified init system:";
   local init_system="$(sed -n -e '/^init_system:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   local services="$(awk '/^[^ ]/{ f=/^services:/; next } f{ print services, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
   enable_services $init_system "$services";
 
-  #TODO print if none specified
   echo -e "\nRunning final scripts if specified:";
   local final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
-  for script in $final_scripts; do
-    run_script $script;
-  done
+  if [[ ! -z $midway_scripts ]]; then
+    for script in $final_scripts; do
+      run_script $script;
+    done
+  else
+    echo "No final_scripts defined. Skipping...";
+  fi
 }
 
 function profile_create() {
-  #TODO prompt for default
   local profile_name=$1;
 
   local init_system="";
@@ -465,6 +474,21 @@ services:${services}
 # final_scripts:
 EOF
   echo -e "\nCreated \e[32m$profile_name\e[0m profile!";
+
+  if [[ ! -f $YACM_DIR/default_profile ]]; then
+    echo -e "\nIt appears no default profile is currently set.";
+    read -p "Would you like to set one now? (Y/n)" yn;
+    case $yn in
+      [Yy]*)
+        profile default;;
+      [Nn]*)
+        echo -e "To set a profile as default later please run: \e[32m yacm profile default\e[0m";;
+      "")
+        profile default;;
+      *)
+        echo "Please answer yes or no.";;
+    esac
+  fi
 }
 
 function print_supported_package_managers() {

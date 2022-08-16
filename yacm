@@ -389,9 +389,10 @@ function run_script() {
 
 function bootstrap_system() {
   local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
+  echo -e "\n\e[32mRunning initial scripts if specified:\e[0m";
   set_hostname $hostname;
 
-  echo -e "\nRunning initial scripts if specified:";
+  echo -e "\n\e[32mRunning initial scripts if specified:\e[0m";
   local initial_scripts="$(awk '/^[^ ]/{ f=/^initial_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
   if [[ ! -z $initial_scripts ]]; then
     for script in $initial_scripts; do
@@ -401,12 +402,12 @@ function bootstrap_system() {
     echo "No initial_scripts defined. Skipping...";
   fi
 
-  echo -e "\nInstalling specified packages with specified package manager:";
+  echo -e "\n\e[32mInstalling specified packages with specified package manager:\e[0m";
   local package_manager="$(sed -n -e '/^package_manager:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   local packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
   install_packages $package_manager "$packages";
 
-  echo -e "\nRunning midway scripts if specified:";
+  echo -e "\n\e[32mRunning midway scripts if specified:\e[0m";
   local midway_scripts="$(awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
   if [[ ! -z $midway_scripts ]]; then
     for script in $midway_scripts; do
@@ -416,12 +417,12 @@ function bootstrap_system() {
     echo "No midway_scripts defined. Skipping...";
   fi
 
-  echo -e "\nEnabling specified services with specified init system:";
+  echo -e "\n\e[32mEnabling specified services with specified init system:\e[0m";
   local init_system="$(sed -n -e '/^init_system:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   local services="$(awk '/^[^ ]/{ f=/^services:/; next } f{ print services, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
   enable_services $init_system "$services";
 
-  echo -e "\nRunning final scripts if specified:";
+  echo -e "\n\e[32mRunning final scripts if specified:\e[0m";
   local final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
   if [[ ! -z $midway_scripts ]]; then
     for script in $final_scripts; do

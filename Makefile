@@ -9,6 +9,8 @@ test:
 		test-runit && \
 	@$(MAKE) -f $(THIS_FILE) \
 		test-pacman && \
+	@$(MAKE) -f $(THIS_FILE) \
+		test-paru && \
 	$(MAKE) -f $(THIS_FILE) \
 		test-apt;
 
@@ -48,3 +50,14 @@ test-pacman:
 		--rm \
 		--name yacm-pacman-test \
 		yacm-pacman;
+
+test-paru:
+	@$(MAKE) -f $(THIS_FILE) \
+		test-build-base && \
+	docker build  \
+		-t yacm-paru \
+		test/paru/ && \
+	docker run \
+		--rm \
+		--name yacm-paru-test \
+		yacm-paru;

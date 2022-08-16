@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run tests
+      - name: Run systemd tests
         run: cd test/systemd && ./run-tests.sh
 
   test-runit:
@@ -26,16 +26,6 @@ jobs:
       - name: Run runit test
         run: make test-runit
 
-  test-pacman:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Run runit test
-        run: make test-pacman
-
   test-apt:
     runs-on: ubuntu-latest
 
@@ -43,5 +33,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Run runit test
+      - name: Run apt tests
         run: make test-apt
+
+  test-pacman:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run pacman tests
+        run: make test-pacman
+
+  test-paru:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run paru tests
+        run: make test-paru

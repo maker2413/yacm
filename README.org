@@ -1,4 +1,36 @@
 #+TITLE: YACM - Yet Another Configuration Manager
 
 ~yacm~ is another configuration manager for your systems that aims to be so
-simplistic it is almost useless.
+simplistic it is almost useless. Most of yacm's functionality can be learned by
+diving into the help menu's defined in the application, but for a brief overview
+of what yacm does lets dive into what a profile actually looks like when
+executed by yacm:
+- yacm will set the hostname of the device it is being run on with the hostname
+  set in the respective profile.
+- yacm will then execute any executable created by the user that is defined in
+  the ~initial_scripts~ block if defined.
+- yacm will then install any packages defined in the respective profile using
+  the package manager defined in the profile.
+- yacm will then give the user another chance to execute ~midway_scripts~ if
+  defined and again these can be any executable defined by the user.
+- yacm will enable services defined in the respective profile using the init
+  system defined in the profile.
+- yacm will then execute any ~final_scripts~ defined in the profile as its final
+  step for bootstrapping a system.
+
+Assuming the user defines idempotent executables the bootstrap can be run over
+and over to add additional configurations to your system. It is also worth
+noting that since yacm assumes you are defining a profile for each of your
+systems you can easily check in all of your system profiles and executables into
+a repository to have an easy way to redeploy any of your systems. By default
+profiles and executables will be stored in ~$HOME/.config/yacm/~ so these can be
+checked into a repository where you store your dotfiles if you do that.
+
+* TODO List
+  The following is a list of features not currently present in yacm:
+  - Secrets: It is almost a must that yacm has a built in way to encrypt certain
+    files or values in their yacm directory for them to be safely commited to a
+    repository.
+  - Config files: I think it would be quite beneficial for yacm to allow users
+    to be able to store config files and specify a destination for them to be
+    copied to.

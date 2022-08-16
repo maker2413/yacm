@@ -1,11 +1,19 @@
 #!/bin/bash
 
+set -e
+
 YACM_VERSION="0.0.1";
 
 YACM_BASE_DIR=;
 YACM_DIR=;
 YACM_PROFILES_DIR=;
 YACM_SCRIPTS_DIR=;
+
+# SUDO is used to determine if yacm is being run by root or not
+SUDO='';
+if [[ $EUID != 0 ]]; then
+  SUDO='sudo';
+fi
 
 function main() {
   # Capture full command, for passing to hooks
@@ -318,7 +326,7 @@ function version() {
 function set_hostname() {
   local __hostname=$1;
   echo -e "\nSetting hostname to: \e[32m$__hostname\e[0m...";
-  sudo sh -c "echo $__hostname > /etc/hostname";
+  $SUDO sh -c "echo $__hostname > /etc/hostname";
 }
 
 function install_packages() {
@@ -328,15 +336,15 @@ function install_packages() {
   if [[ ! -z $__packages ]]; then
     case $__package_manager in
       apt)
-        sudo apt update && sudo apt --yes install $__packages;;
+        $SUDO apt update && $SUDO apt --yes install $__packages;;
       dnf)
-        sudo dnf install -y $__packages;;
+        $SUDO dnf install -y $__packages;;
       pacman)
-        sudo pacman -Sy $__packages --noconfirm --needed;;
+        $SUDO pacman -Sy $__packages --noconfirm --needed;;
       paru)
         paru -Sy $__packages --noconfirm --needed --skipreview;;
       yum)
-        sudo yum install -y $__packages;;
+        $SUDO yum install -y $__packages;;
       *)
         echo -e "\e[31mUnsupported package manager defined!\e[0m";
         print_supported_package_managers;;
@@ -353,12 +361,12 @@ function enable_services() {
   if [[ ! -z $__services ]]; then
     case $__init_system in
       systemd)
-        sudo systemctl enable $__services;;
+        $SUDO systemctl enable $__services;;
       runit)
         for service in $__services; do
           if [ ! -L /run/runit/service/$service ]; then
             echo -e "Enabling service: $service.";
-            sudo ln -s /etc/runit/sv/$service /run/runit/service/$service;
+            $SUDO ln -s /etc/runit/sv/$service /run/runit/service/$service;
           fi
         done;;
       *)

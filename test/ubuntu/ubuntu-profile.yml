@@ -18,7 +18,7 @@ packages:
 
 init_system: systemd
 services:
-  - sshd
+  - ssh
 
 # Here you can define any custom made executable scripts
 # that you would like to have run as a final bootstrap

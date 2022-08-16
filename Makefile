@@ -6,9 +6,7 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
 test:
 	@$(MAKE) -f $(THIS_FILE) \
-		test-runit && \
-	$(MAKE) -f $(THIS_FILE) \
-		test-ubuntu;
+		test-runit;
 
 test-build-base:
 	@docker build \
@@ -22,16 +20,5 @@ test-runit:
 		test/artix-runit/ && \
 	docker run \
 		--rm \
-		--name yacm-artix-runit-test \
-		yacm-artix-runit;
-
-test-ubuntu:
-	@$(MAKE) -f $(THIS_FILE) \
-		test-build-base && \
-	docker build  \
-		-t yacm-ubuntu \
-		test/ubuntu/ && \
-	docker run \
-		--rm \
-		--name yacm-ubuntu-test \
-		yacm-ubuntu;
+		--name yacm-runit-test \
+		yacm-runit;

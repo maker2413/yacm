@@ -6,12 +6,22 @@ on:
       - actions-test
 
 jobs:
-  test:
+  test-systemd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run tests
+        run: cd test/ubuntu && ./run-tests.sh
+
+  test-runit:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: run tests
-        run: cd test/ubuntu && ./run-tests.sh
+      - name: Run runit test
+        run: make test-runit

@@ -16,7 +16,7 @@ test-runit:
 	@$(MAKE) -f $(THIS_FILE) \
 		test-build-base && \
 	docker build  \
-		-t yacm-artix-runit \
+		-t yacm-runit \
 		test/artix-runit/ && \
 	docker run \
 		--rm \

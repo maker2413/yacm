@@ -13,8 +13,5 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: cd to test directory
-        run: cd test/ubuntu
-
       - name: run tests
-        run: ./run-test.sh
+        run: cd test/ubuntu && ./run-test.sh

@@ -2,8 +2,6 @@ name: Test yacm
 
 on:
   push:
-    branches:
-      - actions-test
 
 jobs:
   test-systemd:

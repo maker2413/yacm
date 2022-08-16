@@ -1,4 +1,4 @@
-FROM yacm-base-test
+FROM yacm-base
 FROM fedora
 
 COPY run-tests.sh /root/

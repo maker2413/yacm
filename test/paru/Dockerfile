@@ -1,4 +1,4 @@
-FROM yacm-base-test
+FROM yacm-base
 FROM archlinux
 
 RUN pacman -Sy sudo --needed --noconfirm

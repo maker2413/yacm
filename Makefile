@@ -20,7 +20,7 @@ test:
 
 test-build-base:
 	@docker build \
-		-t yacm-base-test .;
+		-t yacm-base .;
 
 test-runit:
 	@$(MAKE) -f $(THIS_FILE) \

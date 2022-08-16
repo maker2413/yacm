@@ -25,3 +25,23 @@ jobs:
 
       - name: Run runit test
         run: make test-runit
+
+  test-pacman:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run runit test
+        run: make test-pacman
+
+  test-apt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run runit test
+        run: make test-apt

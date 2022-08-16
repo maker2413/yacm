@@ -4,4 +4,4 @@
      --yacm-dir . \
      --yacm-profiles-dir . \
      --yacm-scripts-dir . \
-     bootstrap profile ubuntu-profile;
+     bootstrap profile systemd-profile;

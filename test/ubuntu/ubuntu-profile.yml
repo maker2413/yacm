@@ -1,0 +1,26 @@
+---
+name: UbuntuTest
+hostname: ubuntuyacmtest
+
+# Here you can define any custom made executable scripts
+# that you would like to have run before moving on to
+# package installation.
+# initial_scripts:
+
+package_manager: apt
+packages:
+  - openssh-server
+
+# Here you can define any custom made executable scripts
+# that you would like to have run before moving on to
+# enabling services.
+# midway_scripts:
+
+init_system: systemd
+services:
+  - sshd
+
+# Here you can define any custom made executable scripts
+# that you would like to have run as a final bootstrap
+# step.
+# final_scripts:

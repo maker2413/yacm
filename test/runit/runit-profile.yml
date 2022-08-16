@@ -1,22 +1,22 @@
 ---
-name: UbuntuTest
-hostname: ubuntuyacmtest
+name: RunitTest
+hostname: runityacmtest
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to
 # package installation.
 # initial_scripts:
 
-package_manager: apt
+package_manager: pacman
 packages:
-  - openssh-server
+  - openssh-runit
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to
 # enabling services.
 # midway_scripts:
 
-init_system: systemd
+init_system: runit
 services:
   - sshd
 

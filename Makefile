@@ -8,30 +8,82 @@ test:
 	@$(MAKE) -f $(THIS_FILE) \
 		test-runit && \
 	$(MAKE) -f $(THIS_FILE) \
-		test-ubuntu;
+		test-apt && \
+	@$(MAKE) -f $(THIS_FILE) \
+		test-dnf && \
+	@$(MAKE) -f $(THIS_FILE) \
+		test-pacman && \
+	@$(MAKE) -f $(THIS_FILE) \
+		test-paru && \
+	@$(MAKE) -f $(THIS_FILE) \
+		test-yum;
 
 test-build-base:
 	@docker build \
-		-t yacm-test-base .;
+		-t yacm-base .;
 
 test-runit:
 	@$(MAKE) -f $(THIS_FILE) \
 		test-build-base && \
 	docker build  \
-		-t yacm-artix-runit \
-		test/artix-runit/ && \
+		-t yacm-runit \
+		test/runit/ && \
 	docker run \
 		--rm \
-		--name yacm-artix-runit-test \
-		yacm-artix-runit;
+		--name yacm-runit-test \
+		yacm-runit;
 
-test-ubuntu:
+test-apt:
 	@$(MAKE) -f $(THIS_FILE) \
 		test-build-base && \
 	docker build  \
-		-t yacm-ubuntu \
-		test/ubuntu/ && \
+		-t yacm-apt \
+		test/apt/ && \
 	docker run \
 		--rm \
-		--name yacm-ubuntu-test \
-		yacm-ubuntu;
+		--name yacm-apt-test \
+		yacm-apt;
+
+test-dnf:
+	@$(MAKE) -f $(THIS_FILE) \
+		test-build-base && \
+	docker build  \
+		-t yacm-dnf \
+		test/dnf/ && \
+	docker run \
+		--rm \
+		--name yacm-dnf-test \
+		yacm-dnf;
+
+test-pacman:
+	@$(MAKE) -f $(THIS_FILE) \
+		test-build-base && \
+	docker build  \
+		-t yacm-pacman \
+		test/pacman/ && \
+	docker run \
+		--rm \
+		--name yacm-pacman-test \
+		yacm-pacman;
+
+test-paru:
+	@$(MAKE) -f $(THIS_FILE) \
+		test-build-base && \
+	docker build  \
+		-t yacm-paru \
+		test/paru/ && \
+	docker run \
+		--rm \
+		--name yacm-paru-test \
+		yacm-paru;
+
+test-yum:
+	@$(MAKE) -f $(THIS_FILE) \
+		test-build-base && \
+	docker build  \
+		-t yacm-yum \
+		test/yum/ && \
+	docker run \
+		--rm \
+		--name yacm-yum-test \
+		yacm-yum;

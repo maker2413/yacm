@@ -1,6 +1,6 @@
 ---
-name: ArtixTest
-hostname: artixyacmtest
+name: PacmanTest
+hostname: pacmanyacmtest
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to
@@ -9,16 +9,15 @@ hostname: artixyacmtest
 
 package_manager: pacman
 packages:
-  - openssh-runit
+  - openssh
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to
 # enabling services.
 # midway_scripts:
 
-init_system: runit
+init_system: systemd
 services:
-  - sshd
 
 # Here you can define any custom made executable scripts
 # that you would like to have run as a final bootstrap

@@ -36,6 +36,16 @@ jobs:
       - name: Run apt tests
         run: make test-apt
 
+  test-dnf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run dnf tests
+        run: make test-dnf
+
   test-pacman:
     runs-on: ubuntu-latest
 
@@ -55,3 +65,13 @@ jobs:
 
       - name: Run paru tests
         run: make test-paru
+
+  test-yum:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run yum tests
+        run: make test-yum

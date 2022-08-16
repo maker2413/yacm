@@ -7,12 +7,16 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 test:
 	@$(MAKE) -f $(THIS_FILE) \
 		test-runit && \
+	$(MAKE) -f $(THIS_FILE) \
+		test-apt && \
+	@$(MAKE) -f $(THIS_FILE) \
+		test-dnf && \
 	@$(MAKE) -f $(THIS_FILE) \
 		test-pacman && \
 	@$(MAKE) -f $(THIS_FILE) \
 		test-paru && \
-	$(MAKE) -f $(THIS_FILE) \
-		test-apt;
+	@$(MAKE) -f $(THIS_FILE) \
+		test-yum;
 
 test-build-base:
 	@docker build \
@@ -40,6 +44,17 @@ test-apt:
 		--name yacm-apt-test \
 		yacm-apt;
 
+test-dnf:
+	@$(MAKE) -f $(THIS_FILE) \
+		test-build-base && \
+	docker build  \
+		-t yacm-dnf \
+		test/dnf/ && \
+	docker run \
+		--rm \
+		--name yacm-dnf-test \
+		yacm-dnf;
+
 test-pacman:
 	@$(MAKE) -f $(THIS_FILE) \
 		test-build-base && \
@@ -61,3 +76,14 @@ test-paru:
 		--rm \
 		--name yacm-paru-test \
 		yacm-paru;
+
+test-yum:
+	@$(MAKE) -f $(THIS_FILE) \
+		test-build-base && \
+	docker build  \
+		-t yacm-yum \
+		test/yum/ && \
+	docker run \
+		--rm \
+		--name yacm-yum-test \
+		yacm-yum;

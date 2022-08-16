@@ -389,7 +389,7 @@ function run_script() {
 
 function bootstrap_system() {
   local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
-  echo -e "\n\e[32mRunning initial scripts if specified:\e[0m";
+  echo -e "\n\e[32mSetting hostname if specified:\e[0m";
   set_hostname $hostname;
 
   echo -e "\n\e[32mRunning initial scripts if specified:\e[0m";

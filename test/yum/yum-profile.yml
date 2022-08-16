@@ -1,15 +1,15 @@
 ---
-name: PacmanTest
-hostname: pacmanyacmtest
+name: YumTest
+hostname: yumyacmtest
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to
 # package installation.
 # initial_scripts:
 
-package_manager: pacman
+package_manager: yum
 packages:
-  - openssh
+  - openssh-server
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to

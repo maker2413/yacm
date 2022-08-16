@@ -1,7 +1,7 @@
 #!/bin/bash
 
-../../yacm --yacm-base-dir /root/ \
-     --yacm-dir /root/ \
-     --yacm-profiles-dir /root/ \
-     --yacm-scripts-dir /root/ \
+../../yacm --yacm-base-dir . \
+     --yacm-dir . \
+     --yacm-profiles-dir . \
+     --yacm-scripts-dir . \
      bootstrap profile ubuntu-profile;

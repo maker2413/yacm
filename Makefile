@@ -16,6 +16,8 @@ test:
 	@$(MAKE) -f $(THIS_FILE) \
 		test-paru && \
 	@$(MAKE) -f $(THIS_FILE) \
+		test-yay && \
+	@$(MAKE) -f $(THIS_FILE) \
 		test-yum;
 
 test-build-base:
@@ -76,6 +78,17 @@ test-paru:
 		--rm \
 		--name yacm-paru-test \
 		yacm-paru;
+
+test-yay:
+	@$(MAKE) -f $(THIS_FILE) \
+		test-build-base && \
+	docker build  \
+		-t yacm-yay \
+		test/yay/ && \
+	docker run \
+		--rm \
+		--name yacm-yay-test \
+		yacm-yay;
 
 test-yum:
 	@$(MAKE) -f $(THIS_FILE) \

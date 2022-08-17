@@ -64,6 +64,16 @@ jobs:
       - name: Run paru tests
         run: make test-paru
 
+  test-yay:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Run yay tests
+        run: make test-yay
+
   test-yum:
     runs-on: ubuntu-latest
 

@@ -1,0 +1,26 @@
+---
+name: YayTest
+hostname: yayyacmtest
+
+# Here you can define any custom made executable scripts
+# that you would like to have run before moving on to
+# package installation.
+initial_scripts:
+  - install-yay.sh
+
+package_manager: yay
+packages:
+  - openssh
+
+# Here you can define any custom made executable scripts
+# that you would like to have run before moving on to
+# enabling services.
+# midway_scripts:
+
+init_system: systemd
+services:
+
+# Here you can define any custom made executable scripts
+# that you would like to have run as a final bootstrap
+# step.
+# final_scripts:

@@ -343,6 +343,8 @@ function install_packages() {
         $SUDO pacman -Sy $__packages --noconfirm --needed;;
       paru)
         paru -Sy $__packages --noconfirm --needed --skipreview;;
+      yay)
+        yay -Sy $__packages --noconfirm --needed;;
       yum)
         $SUDO yum install -y $__packages;;
       *)
@@ -506,7 +508,8 @@ function print_supported_package_managers() {
   echo "  2) dnf";
   echo "  3) pacman";
   echo "  4) paru";
-  echo "  5) yum";
+  echo "  5) yay";
+  echo "  6) yum";
 }
 
 function select_package_manager() {
@@ -524,7 +527,9 @@ function select_package_manager() {
         local selected_package_manager="pacman";;
       "4"|"paru")
         local selected_package_manager="paru";;
-      "5"|"yum")
+      "5"|"yay")
+        local selected_package_manager="yay";;
+      "6"|"yum")
         local selected_package_manager="yum";;
       *)
         echo -e "\e[31mPlease select a supported package manager\e[0m";;

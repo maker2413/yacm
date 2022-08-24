@@ -7,9 +7,9 @@ hostname: systemdyacmtest
 # package installation.
 # initial_scripts:
 
-package_manager: apt
+package_manager: dnf
 packages:
-  - openssh-server
+  - httpd
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to
@@ -18,9 +18,10 @@ packages:
 
 init_system: systemd
 services:
-  - ssh
+  - httpd
 
 # Here you can define any custom made executable scripts
 # that you would like to have run as a final bootstrap
 # step.
-# final_scripts:
+final_scripts:
+  - check-systemd.sh

@@ -6,7 +6,9 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
 run-all-tests:
 	@$(MAKE) -f $(THIS_FILE) \
-		TEST=runit run-tests && \
+		TEST=systemd run-tests && \
+	$(MAKE) -f $(THIS_FILE) \
+		TEST=runit DOCKER_PORT=8080 run-tests && \
 	$(MAKE) -f $(THIS_FILE) \
 		TEST=apt run-tests && \
 	$(MAKE) -f $(THIS_FILE) \
@@ -27,10 +29,4 @@ build-test-base:
 run-tests:
 	@$(MAKE) -f $(THIS_FILE) \
 		build-test-base && \
-	docker build \
-		-t yacm-$(TEST) \
-		test/$(TEST)/ && \
-	docker run \
-		--rm \
-		--name yacm-$(TEST)-test \
-		yacm-$(TEST);
+	./test/run-tests.sh;

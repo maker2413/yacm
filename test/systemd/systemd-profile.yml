@@ -23,5 +23,4 @@ services:
 # Here you can define any custom made executable scripts
 # that you would like to have run as a final bootstrap
 # step.
-final_scripts:
-  - check-systemd.sh
+#final_scripts:

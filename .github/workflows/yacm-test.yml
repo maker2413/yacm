@@ -1,8 +1,5 @@
 name: Test yacm
 
-on:
-  push:
-
 jobs:
   test-systemd:
     runs-on: ubuntu-latest

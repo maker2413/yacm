@@ -12,3 +12,5 @@ COPY run-yacm.sh /root/
 COPY apt-profile.yml /root/
 
 COPY --from=0 /usr/bin/yacm /usr/bin/yacm
+
+CMD [ "/sbin/init" ]

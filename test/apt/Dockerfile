@@ -1,16 +1,14 @@
 FROM yacm-base
-FROM ubuntu
+FROM docker.io/ubuntu:latest
 
 RUN apt update && apt install -y systemd procps less
-
-RUN apt install -y openssh-server
-
-RUN systemctl enable ssh
 
 COPY run-yacm.sh /root/
 
 COPY apt-profile.yml /root/
 
+COPY wait_for_tests.sh /root/
+
 COPY --from=0 /usr/bin/yacm /usr/bin/yacm
 
-CMD [ "/sbin/init" ]
+CMD [ "/root/run-yacm.sh" ]

@@ -50,7 +50,7 @@ case "$TEST" in
            yacm-$TEST-test \
            /bin/bash -c "which apache2" \
       || podman stop yacm-$TEST-test;;
-  dnf)
+  dnf|yum)
     wait_for_bootstrap httpd;
 
     podman exec -it \

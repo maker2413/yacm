@@ -1,5 +1,5 @@
 FROM yacm-base
-FROM artixlinux/runit
+FROM docker.io/artixlinux/runit:latest
 
 COPY run-yacm.sh /root/
 

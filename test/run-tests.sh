@@ -4,27 +4,35 @@ set -e;
 
 cd "${0%/*}";
 
-: "${DOCKER_PORT:=80}"
+: "${CONTAINER_PORT:=80}"
 
-docker build \
+podman build \
        -t yacm-$TEST ./$TEST;
 
-docker run -d \
-       --tmpfs /tmp \
-       --tmpfs /run \
-       -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-       -p 9090:$DOCKER_PORT \
+podman run -d \
+       -p 9090:$CONTAINER_PORT \
        --name yacm-$TEST-test \
        --rm \
        yacm-$TEST;
 
-docker exec -it \
-       yacm-$TEST-test \
-       /root/run-yacm.sh;
+case "$TEST" in
+  systemd|runit)
+    podman exec -it \
+           yacm-$TEST-test \
+           /root/run-yacm.sh;
 
-echo "Waiting for 2 seconds to give httpd time to boot";
-sleep 2;
+    echo "Waiting for 2 seconds to give httpd time to boot";
+    sleep 2;
 
-curl localhost:9090 || docker stop yacm-$TEST-test;
+    curl localhost:9090 || podman stop yacm-$TEST-test;;
+  apt)
+    echo "Waiting for 20 seconds to give httpd time to boot";
+    sleep 20;
 
-docker stop yacm-$TEST-test;
+    podman exec -it \
+           yacm-$TEST-test \
+           /bin/bash -c "which apache2" \
+      || podman stop yacm-$TEST-test;;
+esac
+
+podman stop yacm-$TEST-test;

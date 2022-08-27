@@ -8,7 +8,7 @@ run-all-tests:
 	@$(MAKE) -f $(THIS_FILE) \
 		TEST=systemd run-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=runit DOCKER_PORT=8080 run-tests && \
+		TEST=runit CONTAINER_PORT=8080 run-tests && \
 	$(MAKE) -f $(THIS_FILE) \
 		TEST=apt run-tests && \
 	$(MAKE) -f $(THIS_FILE) \
@@ -23,7 +23,7 @@ run-all-tests:
 		TEST=yum run-tests;
 
 build-test-base:
-	@docker build \
+	@podman build \
 		-t yacm-base .;
 
 run-tests:

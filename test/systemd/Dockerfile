@@ -1,5 +1,5 @@
 FROM yacm-base
-FROM fedora
+FROM docker.io/fedora:latest
 
 RUN dnf install -y systemd procps less
 

@@ -363,7 +363,8 @@ function enable_services() {
   if [[ ! -z $__services ]]; then
     case $__init_system in
       systemd)
-        $SUDO systemctl enable $__services;;
+        echo -e "Enabling service: $service.";
+        $SUDO systemctl enable --now $__services;;
       runit)
         for service in $__services; do
           if [ ! -L /run/runit/service/$service ]; then
@@ -426,7 +427,7 @@ function bootstrap_system() {
 
   echo -e "\n\e[32mRunning final scripts if specified:\e[0m";
   local final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
-  if [[ ! -z $midway_scripts ]]; then
+  if [[ ! -z $final_scripts ]]; then
     for script in $final_scripts; do
       run_script $script;
     done

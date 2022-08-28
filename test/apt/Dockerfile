@@ -1,10 +1,14 @@
 FROM yacm-base
-FROM ubuntu
+FROM docker.io/ubuntu:latest
 
-COPY run-tests.sh /root/
+RUN apt update && apt install -y systemd procps less
+
+COPY run-yacm.sh /root/
 
 COPY apt-profile.yml /root/
 
+COPY wait_for_tests.sh /root/
+
 COPY --from=0 /usr/bin/yacm /usr/bin/yacm
 
-CMD /root/run-tests.sh
+CMD [ "/root/run-yacm.sh" ]

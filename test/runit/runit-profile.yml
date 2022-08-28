@@ -9,7 +9,7 @@ hostname: runityacmtest
 
 package_manager: pacman
 packages:
-  - openssh-runit
+  - darkhttpd-runit
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to
@@ -18,7 +18,7 @@ packages:
 
 init_system: runit
 services:
-  - sshd
+  - darkhttpd
 
 # Here you can define any custom made executable scripts
 # that you would like to have run as a final bootstrap

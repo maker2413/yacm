@@ -1,10 +1,8 @@
 FROM yacm-base
-FROM artixlinux/runit
+FROM docker.io/artixlinux/runit:latest
 
-COPY run-tests.sh /root/
+COPY run-yacm.sh /root/
 
 COPY runit-profile.yml /root/
 
 COPY --from=0 /usr/bin/yacm /usr/bin/yacm
-
-CMD /root/run-tests.sh

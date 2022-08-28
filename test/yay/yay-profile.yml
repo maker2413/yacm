@@ -10,7 +10,8 @@ initial_scripts:
 
 package_manager: yay
 packages:
-  - openssh
+  - lighttpd
+  - which
 
 # Here you can define any custom made executable scripts
 # that you would like to have run before moving on to
@@ -23,4 +24,5 @@ services:
 # Here you can define any custom made executable scripts
 # that you would like to have run as a final bootstrap
 # step.
-# final_scripts:
+final_scripts:
+  - wait_for_tests.sh

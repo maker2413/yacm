@@ -1,5 +1,5 @@
 FROM yacm-base
-FROM archlinux
+FROM docker.io/archlinux:latest
 
 COPY run-yacm.sh /root/
 

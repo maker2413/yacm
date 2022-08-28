@@ -8,7 +8,7 @@ run-all-tests:
 	@$(MAKE) -f $(THIS_FILE) \
 		TEST=systemd run-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=runit CONTAINER_PORT=8080 run-tests && \
+		TEST=runit run-tests && \
 	$(MAKE) -f $(THIS_FILE) \
 		TEST=apt run-tests && \
 	$(MAKE) -f $(THIS_FILE) \

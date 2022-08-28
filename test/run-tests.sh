@@ -4,7 +4,9 @@ set -e;
 
 cd "${0%/*}";
 
-: "${CONTAINER_PORT:=80}"
+: "${RUNIT_PORT:=8080}"
+: "${SYSTEMD_PORT:=80}"
+: "${TEST:=runit}"
 
 function wait_for_bootstrap() {
   local __package=$1;
@@ -27,11 +29,25 @@ function wait_for_bootstrap() {
 podman build \
        -t yacm-$TEST ./$TEST;
 
-podman run -d \
-       -p 9090:$CONTAINER_PORT \
-       --name yacm-$TEST-test \
-       --rm \
-       yacm-$TEST;
+case "$TEST" in
+  systemd)
+    podman run -d \
+           -p 9090:$SYSTEMD_PORT \
+           --name yacm-$TEST-test \
+           --rm \
+           yacm-$TEST;;
+  runit)
+    podman run -d \
+           -p 9090:$RUNIT_PORT \
+           --name yacm-$TEST-test \
+           --rm \
+           yacm-$TEST;;
+  *)
+    podman run -d \
+            --name yacm-$TEST-test \
+            --rm \
+            yacm-$TEST;;
+esac
 
 case "$TEST" in
   systemd|runit)
@@ -56,6 +72,13 @@ case "$TEST" in
     podman exec -it \
            yacm-$TEST-test \
            /bin/bash -c "which httpd" \
+      || podman stop yacm-$TEST-test;;
+  pacman|paru|yay)
+    wait_for_bootstrap lighttpd;
+
+    podman exec -it \
+           yacm-$TEST-test \
+           /bin/bash -c "which lighttpd" \
       || podman stop yacm-$TEST-test;;
 esac
 

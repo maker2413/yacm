@@ -153,6 +153,13 @@ EOF
   printf '%s' "$msg";
 }
 
+function print_default_warning() {
+  echo -e "\nDefault profile set! It is highly recommended to add:";
+  echo -e "\e[32m$YACM_DIR/default_profile\e[0m to your \e[32m.gitignore\e[0m";
+  echo "if you keep your yacm directory in source control to allow";
+  echo "you to set a default profile on all of your systems.";
+}
+
 function bootstrap() {
   local subcommand=$1;
   if [[ -z $subcommand ]]; then
@@ -195,11 +202,13 @@ function init() {
       read -p "Would you like to make this profile the default for this system? (Y/n)" yn;
       case $yn in
         [Yy]*)
-          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;;
+          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;
+          print_default_warning;;
         [Nn]*)
           echo -e "To set a profile as default later please run: \e[32m yacm profile default\e[0m";;
         "")
-          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;;
+          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;
+          print_default_warning;;
         *)
           echo "Please answer yes or no.";;
       esac
@@ -266,6 +275,7 @@ function profile() {
           if [[ -f "$YACM_PROFILES_DIR/$selected_profile.yml" ]]; then
             echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/default_profile;
             echo -e "\nSuccessfully set default profile to \e[32m$selected_profile\e[0m!";
+            print_default_warning;
           else
             echo -e "\e[31mERROR: provided profile doesn't exist!.\e[0m";
             echo "Please specify a profile that exists.";
@@ -280,7 +290,7 @@ function profile() {
             if [[ -f "$YACM_PROFILES_DIR/$prompt.yml" ]]; then
               selected_profile=$prompt;
               echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/default_profile;
-              echo -e "Profile \e[32m$selected_profile\e[0m set as default.";
+              print_default_warning;
             else
               echo -e "\n\e[31mPlease specify an existing profile\e[0m\n";
             fi

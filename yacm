@@ -687,6 +687,31 @@ function set_yacm_defaults() {
   fi
 }
 
+function load_config() {
+  if [[ ! -f $YACM_DIR/config.yml ]]; then
+    cat >$YACM_DIR/config.yml <<EOF
+---
+# Configuration for yacm
+
+# Uncomment any of the following to override the defaults for these variables
+# yacm_base_dir: ${XDG_CONFIG_DIR:-$HOME/.config}
+# yacm_dir: ${YACM_BASE_DIR}/yacm
+# yacm_profiles_dir: ${YACM_DIR}/profiles
+# yacm_scripts_dir: ${YACM_DIR}/scripts
+EOF
+  else
+    local config_file_yacm_base_dir="$(sed -n -e '/^yacm_base_dir:/p' $YACM_DIR/config.yml | awk '{print $2}')";
+    local config_file_yacm_dir="$(sed -n -e '/^yacm_dir:/p' $YACM_DIR/config.yml | awk '{print $2}')";
+    local config_file_yacm_profiles_dir="$(sed -n -e '/^yacm_profiles_dir:/p' $YACM_DIR/config.yml | awk '{print $2}')";
+    local config_file_yacm_scripts_dir="$(sed -n -e '/^yacm_scripts_dir:/p' $YACM_DIR/config.yml | awk '{print $2}')";
+    YACM_BASE_DIR="${config_file_yacm_base_dir:-$YACM_BASE_DIR}";
+    YACM_DIR="${config_file_yacm_dir:-$YACM_DIR}";
+    YACM_PROFILES_DIR="${config_file_yacm_profiles_dir:-$YACM_PROFILES_DIR}";
+    YACM_SCRIPTS_DIR="${config_file_yacm_scripts_dir:-$YACM_SCRIPTS_DIR}";
+  fi
+}
+
 set_global_args "$@";
 set_yacm_defaults;
+load_config;
 main "${MAIN_ARGS[@]}";

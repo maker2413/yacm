@@ -70,6 +70,7 @@ Commands:
   yacm bootstrap      - Bootstrap the current system
   yacm init           - Initalize a new profile for a system
   yacm profile        - Creates and manages system profiles
+
   yacm help           - Prints this menu
   yacm version        - Prints current yacm version
 

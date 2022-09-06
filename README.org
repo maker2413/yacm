@@ -31,6 +31,3 @@ checked into a repository where you store your dotfiles if you do that.
   - Secrets: It is almost a must that yacm has a built in way to encrypt certain
     files or values in their yacm directory for them to be safely commited to a
     repository.
-  - Config files: I think it would be quite beneficial for yacm to allow users
-    to be able to store config files and specify a destination for them to be
-    copied to.

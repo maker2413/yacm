@@ -60,8 +60,7 @@ function main() {
 }
 
 function help() {
-  local msg;
-  IFS='' read -r -d '' msg << EOF
+  cat << EOF
 Configure your system(s) with any executable(s) YOU design!
 
 Usage: yacm [global options] <command> [subcommand]
@@ -91,12 +90,10 @@ Global options (use these before the command, if any):
   --yacm-profiles-dir - Overrides the standard yacm dir
                         default: {$YACM_DIR/profiles}
 EOF
-  printf '%s' "$msg";
 }
 
 function bootstrap_help() {
-  local msg;
-  IFS='' read -r -d '' msg << EOF
+  cat << EOF
 Used to bootstrap the current system with the currently
 set profile or with the profile specified.
 
@@ -110,12 +107,10 @@ Alternative subcommands:
   --help  - Prints this menu
   -h      - Prints this menu
 EOF
-  printf '%s' "$msg";
 }
 
 function init_help() {
-  local msg;
-  IFS='' read -r -d '' msg << EOF
+  cat << EOF
 Used to create profile if none are present and
 set default profile for current system.
 
@@ -128,12 +123,10 @@ Alternative subcommands:
   --help - Prints this menu
   -h     - Prints this menu
 EOF
-  printf '%s' "$msg";
 }
 
 function profile_help() {
-  local msg;
-  IFS='' read -r -d '' msg << EOF
+  cat << EOF
 Used to create and manage yacm profiles
 
 Usage: yacm profile <subcommand> [profile name]
@@ -151,7 +144,6 @@ Alternative subcommands:
   -h      - Prints this menu
   -l      - List profiles on system
 EOF
-  printf '%s' "$msg";
 }
 
 function print_default_warning() {
@@ -167,8 +159,7 @@ function bootstrap() {
     echo "Checking current default profile...";
     local default_profile="$(cat $YACM_DIR/default_profile 2>/dev/null)";
     if [[ -f $YACM_PROFILES_DIR/$default_profile.yml ]]; then
-      echo -e "\nBootstrapping system with profile: \e[32m$default_profile\e[0m...";
-      bootstrap_system $default_profile
+      bootstrap_prompt $default_profile
     else
       echo -e "\n\e[31mNo default profile currently set!.\e[0m";
       echo -e "Please run: \e[32myacm profile default\e[0m to set default for this system or";
@@ -180,8 +171,7 @@ function bootstrap() {
         bootstrap_help;;
       profile)
         if [[ -f $YACM_PROFILES_DIR/$2.yml ]]; then
-          echo -e "Bootstrapping system with profile: \e[32m$2\e[0m...";
-          bootstrap_system $2;
+          bootstrap_prompt $2;
         else
           echo -e "\e[31mERROR: provided profile doesn't exist!.\e[0m";
           echo "Please specify a profile that exists.";
@@ -393,15 +383,32 @@ function enable_services() {
 }
 
 function run_script() {
-  if [[ -f $YACM_SCRIPTS_DIR/$1 ]]; then
-    echo -e "Executing: \e[32m$YACM_SCRIPTS_DIR/$1\e[0m...";
-    $YACM_SCRIPTS_DIR/$1;
+  local script=$1;
+  if [[ -f $YACM_SCRIPTS_DIR/$script ]]; then
+    echo -e "\nExecuting: \e[32m$YACM_SCRIPTS_DIR/$script\e[0m...";
+    $YACM_SCRIPTS_DIR/$script;
   else
-    echo -e "\e[31mError: \e[32m$YACM_SCRIPTS_DIR/$1\e[31m not found!\e[0m";
+    echo -e "\e[31mError: \e[32m$YACM_SCRIPTS_DIR/$script\e[31m not found!\e[0m";
   fi
 }
 
+function bootstrap_prompt() {
+  echo -e "\nProfile: \e[32m$1\e[0m selected.";
+  read -p "Would you like to proceed? (Y/n): " yn;
+  case $yn in
+    [Yy]*)
+      bootstrap_system $1;;
+    [Nn]*)
+      echo -e "\e[31mAborting system bootstrap...\e[0m";;
+    "")
+      bootstrap_system $1;;
+    *)
+      echo -e "\e[31mPlease answer yes or no.\e[0m";;
+  esac
+}
+
 function bootstrap_system() {
+  echo -e "\nBootstrapping system with profile: \e[32m$1\e[0m...";
   local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
   echo -e "\n\e[32mSetting hostname if specified:\e[0m";
   set_hostname $hostname;

@@ -187,8 +187,9 @@ function bootstrap() {
 function init() {
   local subcommand=$1;
   if [[ -z $subcommand ]]; then
-    echo -e "Initializng yacm...\n";
+    echo -e "Initializng yacm...";
     if [ ! "$(ls -A $YACM_PROFILES_DIR)" ]; then
+      echo "\nCreating profile for yacm...\n";
       profile create;
       read -p "Would you like to make this profile the default for this system? (Y/n)" yn;
       case $yn in
@@ -201,10 +202,31 @@ function init() {
           echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;
           print_default_warning;;
         *)
-          echo "Please answer yes or no.";;
+          echo -e "\e[31mPlease answer yes or no.\e[0m";;
       esac
     else
-      profile default;
+      if [ ! -f $YACM_DIR/default_profile ]; then
+        echo "";
+        profile default;
+      else
+        echo -e "\nCurrently the following profiles exist:";
+        profile list;
+        echo -e "\nAnd the current default is set to:";
+        head -n 1 $YACM_DIR/default_profile;
+        echo "";
+        read -p "Would you like to change the defaul profile? (y/N)" yn;
+        case $yn in
+          [Yy]*)
+            echo "";
+            profile default;;
+          [Nn]*)
+            echo "Keeping current default profile...";;
+          "")
+            echo "Keeping current default profile...";;
+          *)
+            echo -e "\e[31mPlease answer yes or no.\e[0m";;
+        esac
+      fi
     fi
     echo -e "\nFinished initializing yacm!";
   else
@@ -235,10 +257,10 @@ function profile() {
           echo -e "\e[31mPleace run \e[32myacm init\e[31m!\e[0m";
         fi;;
       create|--create)
-        echo -e "Creating new profile...\n";
+        echo -e "Creating new profile...";
         if [ -z $2 ]; then
-          echo "What would you like this profile to be called?";
-          read profile_name;
+          echo "";
+          read -p "What would you like this profile to be called?: " profile_name;
         else
           profile_name=$2;
         fi
@@ -257,7 +279,7 @@ function profile() {
             "")
               echo "\nCancelled profile creation";;
             *)
-              echo "Please answer yes or no.";;
+              echo -e "\e[31mPlease answer yes or no.\e[0m";;
           esac
         fi;;
       default)
@@ -273,27 +295,37 @@ function profile() {
             echo -e "To see profiles that exists run: \e[32m yacm profile list\e[0m.";
           fi
         else
-          while [[ -z $selected_profile ]]; do
-            echo -e "Which of the following profiles would you like to set as default for this system?\n";
-            profile list;
-            echo "";
-            read -p "Default: " prompt;
-            if [[ -f "$YACM_PROFILES_DIR/$prompt.yml" ]]; then
-              selected_profile=$prompt;
-              echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/default_profile;
-              print_default_warning;
-            else
-              echo -e "\n\e[31mPlease specify an existing profile\e[0m\n";
-            fi
-          done
+          echo -e "Currently the following profiles exist:";
+          profile list;
+          echo -e "\nPlease type the profile you would like to set as the default";
+          read -p "or type the name of a profile you would like to create: " selected_profile;
+          if [[ -f "$YACM_PROFILES_DIR/$selected_profile.yml" ]]; then
+            echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/default_profile;
+            print_default_warning;
+          else
+            echo -e "\n\e[31mWarning:\e[0m Profile doesn't currently exist."
+            read -p "Would you like to create it now? (Y/n): " yn;
+            case $yn in
+              [Yy]*)
+                echo "";
+                profile create $selected_profile;;
+              [Nn]*)
+                echo "Keeping current default profile...";;
+              "")
+                echo "";
+                profile create $selected_profile;;
+              *)
+                echo -e "\e[31mPlease answer yes or no.\e[0m";;
+            esac
+          fi
         fi;;
       delete|--delete)
         if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
           if [ -z $2 ]; then
-            echo -e "Which profile would you like to delete?\n";
+            echo "The following profiles currently exist:";
             profile list;
-            read profile_name;
             echo "";
+            read -p "Which profile would you like to delete?: " profile_name;
           else
             profile_name=$2;
           fi
@@ -452,6 +484,8 @@ function bootstrap_system() {
   else
     echo "No final_scripts defined. Skipping...";
   fi
+
+  echo -e "\n\e[32mBootstrap complete!\e[0m";
 }
 
 function profile_create() {
@@ -463,7 +497,7 @@ function profile_create() {
 
   while [[ -z $host_name ]]; do
     echo "";
-    read -p 'What will the hostname of this device be?: ' host_name;
+    read -p "What will the hostname of this device be?: " host_name;
     if [[ -z $host_name ]]; then
       echo "Please provide a hostname.";
     fi
@@ -516,7 +550,7 @@ EOF
       "")
         profile default;;
       *)
-        echo "Please answer yes or no.";;
+        echo -e "\e[31mPlease answer yes or no.\e[0m";;
     esac
   fi
 }

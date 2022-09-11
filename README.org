@@ -2,21 +2,56 @@
 
 ~yacm~ is another configuration manager for your systems that aims to be so
 simplistic it is almost useless. Most of yacm's functionality can be learned by
-diving into the help menu's defined in the application, but for a brief overview
-of what yacm does lets dive into what a profile actually looks like when
-executed by yacm:
-- yacm will set the hostname of the device it is being run on with the hostname
-  set in the respective profile.
-- yacm will then execute any executable created by the user that is defined in
-  the ~initial_scripts~ block if defined.
-- yacm will then install any packages defined in the respective profile using
-  the package manager defined in the profile.
-- yacm will then give the user another chance to execute ~midway_scripts~ if
-  defined and again these can be any executable defined by the user.
-- yacm will enable services defined in the respective profile using the init
-  system defined in the profile.
-- yacm will then execute any ~final_scripts~ defined in the profile as its final
-  step for bootstrapping a system.
+diving into the help menu's defined in the application: ~yacm help~. With yacm
+users can define a profile for each system that the user wants to configure with
+yacm. Profiles can be created and managed with yacm itself or with a simple text
+editor.
+
+* Installation
+There are a couple of ways to currently install yacm.
+
+** Download
+You can download yacm directly from github and place it in your ~$PATH~ with a
+command similar to:
+#+begin_src bash
+  curl -fLo /usr/local/bin/yacm https://github.com/maker2413/yacm/raw/master/yacm && chmod a+x /usr/local/bin/yacm
+#+end_src
+Of course you can alter the file paths in the above command to match your
+current setup for ~$PATH~.
+
+** Clone
+You can of course also clone the repository to your local system and setup a
+symlink to a directory currently in your ~$PATH~. It could be done with the
+following:
+#+begin_src bash
+git clone https://github.com/maker2413/yacm.git ~/.yacm-project
+ln -s ~/.yacm-project/yadm ~/bin/yacm
+#+end_src
+Of course again the above can be altered to match your current setup for
+~$PATH~. The pros of installing yacm with this method is you can update yacm by
+doing a git pull in the repo you cloned down or tag it to a specific version by
+checking out a tag in that repo.
+
+* Usage
+To begin using yacm after installation simply type: ~yacm init~. This will
+create a profile if none are currently present or prompt the user to set a
+default profile for the current system. After a default profile has been set the
+system can be bootstrapped by just running: ~yacm bootstrap~.
+
+Any other functionality yacm provides can be learned from its built in help menus:
+#+begin_src bash
+  echo "yacm has built in help menus for all of its features:"
+  ./yacm help
+
+  echo -e "\nBootstrapping functionality:"
+  ./yacm bootstrap help
+
+  echo -e "\nSystem initialization:"
+  ./yacm init help
+
+  echo -e "\nProfile management:"
+  ./yacm profile help
+#+end_src
 
 Assuming the user defines idempotent executables the bootstrap can be run over
 and over to add additional configurations to your system. It is also worth

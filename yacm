@@ -4,6 +4,7 @@ set -e
 
 YACM_VERSION="0.0.1";
 
+SKIP_CONFIRMATION=;
 YACM_BASE_DIR=;
 YACM_DIR=;
 YACM_PROFILES_DIR=;
@@ -83,12 +84,14 @@ Global subcommands:
   help                - Prints help menu for subcommand
 
 Global options (use these before the command, if any):
-  --yacm-base-dir     - Overrides the standard yacm dir
+  --yacm-base-dir     - Overrides the standard yacm base dir
                         default: {$HOME/.config}
   --yacm-dir          - Overrides the standard yacm dir
                         default: {$YACM_BASE_DIR/yacm}
-  --yacm-profiles-dir - Overrides the standard yacm dir
+  --yacm-profiles-dir - Overrides the standard yacm profiles dir
                         default: {$YACM_DIR/profiles}
+  --yacm-scripts-dir  - Overrides the standard yacm scripts dir
+                        default: {$YACM_DIR/scripts}
 EOF
 }
 
@@ -425,18 +428,22 @@ function run_script() {
 }
 
 function bootstrap_prompt() {
-  echo -e "\nProfile: \e[32m$1\e[0m selected.";
-  read -p "Would you like to proceed? (Y/n): " yn;
-  case $yn in
-    [Yy]*)
-      bootstrap_system $1;;
-    [Nn]*)
-      echo -e "\e[31mAborting system bootstrap...\e[0m";;
-    "")
-      bootstrap_system $1;;
-    *)
-      echo -e "\e[31mPlease answer yes or no.\e[0m";;
-  esac
+  if [[ $SKIP_CONFIRMATION == 0 ]]; then
+    echo -e "\nProfile: \e[32m$1\e[0m selected.";
+    read -p "Would you like to proceed? (Y/n): " yn;
+    case $yn in
+      [Yy]*)
+        bootstrap_system $1;;
+      [Nn]*)
+        echo -e "\e[31mAborting system bootstrap...\e[0m";;
+      "")
+        bootstrap_system $1;;
+      *)
+        echo -e "\e[31mPlease answer yes or no.\e[0m";;
+    esac
+  else
+    bootstrap_system $1;
+  fi
 }
 
 function bootstrap_system() {
@@ -671,33 +678,35 @@ function set_global_args() {
   while [[ $# -gt 0 ]] ; do
     key="$1"
     case $key in
+      --skip-confirmation)
+        SKIP_CONFIRMATION=1;;
       --yacm-dir) # override the standard YACM_DIR
         if [ -z "$2" ]; then
           echo -e "\e[31mWarning! You can't specify an empty \e[32myacm-dir\e[31m path\e[0m";
-          exit 1
+          exit 1;
         fi
-        YACM_DIR="$(qualify_path "$2" "yacm-dir")"
+        YACM_DIR="$(qualify_path "$2" "yacm-dir")";
         shift;;
       --yacm-base-dir) # override the standard YACM_BASE_DIR
         if [ -z "$2" ]; then
           echo -e "\e[31mWarning! You can't specify an empty \e[32myacm-base-dir\e[31m path\e[0m";
-          exit 1
+          exit 1;
         fi
-        YACM_BASE_DIR="$(qualify_path "$2" "data")"
+        YACM_BASE_DIR="$(qualify_path "$2" "data")";
         shift;;
       --yacm-profiles-dir) # override the standard YACM_PROFILES_DIR
         if [ -z "$2" ]; then
           echo -e "\e[31mWarning! You can't specify an empty \e[32myacm-profiles-dir\e[31m path\e[0m";
-          exit 1
+          exit 1;
         fi
-        YACM_PROFILES_DIR="$(qualify_path "$2")"
+        YACM_PROFILES_DIR="$(qualify_path "$2")";
         shift;;
       --yacm-scripts-dir) # override the standard YACM_SCRIPTS_DIR
         if [ -z "$2" ]; then
           echo -e "\e[31mWarning! You can't specify an empty \e[32myacm-scripts-dir\e[31m path\e[0m";
-          exit 1
+          exit 1;
         fi
-        YACM_SCRIPTS_DIR="$(qualify_path "$2")"
+        YACM_SCRIPTS_DIR="$(qualify_path "$2")";
         shift;;
       *) # main arguments are kept intact
         MAIN_ARGS+=("$1");;
@@ -707,6 +716,11 @@ function set_global_args() {
 }
 
 function set_yacm_defaults() {
+  # only set SKIP_CONFIRMATION if it hasn't already be set
+  if [ -z $SKIP_CONFIRMATION ]; then
+    SKIP_CONFIRMATION=0;
+  fi
+
   # only set YACM_BASE_DIR if it hasn't already be set
   if [ -z $YACM_BASE_DIR ]; then
     local base_yacm_dir="${XDG_CONFIG_DIR:-$HOME/.config}";

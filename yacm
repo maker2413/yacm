@@ -27,7 +27,6 @@ function main() {
     param="${param// /\\ }"
     _fc+=( "$param" )
   done
-  FULL_COMMAND="${_fc[*]}"
 
   # Create the YACM_DIR & YACM_DATA if they doesn't exist yet
   [ -d "$YACM_BASE_DIR" ] || mkdir -p "$YACM_BASE_DIR"
@@ -43,13 +42,13 @@ function main() {
   elif [[ "$1" =~ $internal_commands ]]; then
     case "$1" in
       bootstrap)
-        bootstrap $2 $3;;
+        bootstrap "$2" "$3";;
       help|-h|--help)
         help;;
       init)
-        init $2;;
+        init "$2";;
       profile)
-        profile $2 $3 ;;
+        profile "$2" "$3" ;;
       version|-v|--version)
         version;;
     esac
@@ -157,12 +156,14 @@ function print_default_warning() {
 }
 
 function bootstrap() {
+  local default_profile;
+
   local subcommand=$1;
   if [[ -z $subcommand ]]; then
     echo "Checking current default profile...";
-    local default_profile="$(cat $YACM_DIR/default_profile 2>/dev/null)";
+    default_profile="$(cat "$YACM_DIR"/default_profile 2>/dev/null)";
     if [[ -f $YACM_PROFILES_DIR/$default_profile.yml ]]; then
-      bootstrap_prompt $default_profile
+      bootstrap_prompt "$default_profile";
     else
       echo -e "\n\e[31mNo default profile currently set!.\e[0m";
       echo -e "Please run: \e[32myacm profile default\e[0m to set default for this system or";
@@ -174,7 +175,7 @@ function bootstrap() {
         bootstrap_help;;
       profile)
         if [[ -f $YACM_PROFILES_DIR/$2.yml ]]; then
-          bootstrap_prompt $2;
+          bootstrap_prompt "$2";
         else
           echo -e "\e[31mERROR: provided profile doesn't exist!.\e[0m";
           echo "Please specify a profile that exists.";
@@ -189,50 +190,7 @@ function bootstrap() {
 
 function init() {
   local subcommand=$1;
-  if [[ -z $subcommand ]]; then
-    echo -e "Initializng yacm...";
-    if [ ! "$(ls -A $YACM_PROFILES_DIR)" ]; then
-      echo "\nCreating profile for yacm...\n";
-      profile create;
-      read -p "Would you like to make this profile the default for this system? (Y/n)" yn;
-      case $yn in
-        [Yy]*)
-          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;
-          print_default_warning;;
-        [Nn]*)
-          echo -e "To set a profile as default later please run: \e[32m yacm profile default\e[0m";;
-        "")
-          echo "$(basename $YACM_PROFILES_DIR/*.yml .yml)" > $YACM_DIR/default_profile;
-          print_default_warning;;
-        *)
-          echo -e "\e[31mPlease answer yes or no.\e[0m";;
-      esac
-    else
-      if [ ! -f $YACM_DIR/default_profile ]; then
-        echo "";
-        profile default;
-      else
-        echo -e "\nCurrently the following profiles exist:";
-        profile list;
-        echo -e "\nAnd the current default is set to:";
-        head -n 1 $YACM_DIR/default_profile;
-        echo "";
-        read -p "Would you like to change the defaul profile? (y/N)" yn;
-        case $yn in
-          [Yy]*)
-            echo "";
-            profile default;;
-          [Nn]*)
-            echo "Keeping current default profile...";;
-          "")
-            echo "Keeping current default profile...";;
-          *)
-            echo -e "\e[31mPlease answer yes or no.\e[0m";;
-        esac
-      fi
-    fi
-    echo -e "\nFinished initializing yacm!";
-  else
+  if [[ -n $subcommand ]]; then
     case "$subcommand" in
       help|-h|--help)
         init_help;;
@@ -240,20 +198,43 @@ function init() {
         echo -e "\e[31mUnrecognized subcommand for init command.\e[0m\n";
         init_help;;
     esac
+  else
+    echo -e "Initializng yacm...";
+    if [ ! -f "$YACM_DIR"/default_profile ]; then
+      echo "";
+      profile default;
+    else
+      echo -e "\nThe current default is set to:";
+      head -n 1 "$YACM_DIR"/default_profile;
+      echo "";
+      read -rp "Would you like to change the defaul profile? (y/N)" yn;
+      case $yn in
+        [Yy]*)
+          echo "";
+          profile default;;
+        [Nn]*)
+          echo "Keeping current default profile...";;
+        "")
+          echo "Keeping current default profile...";;
+        *)
+          echo -e "\e[31mPlease answer yes or no.\e[0m";;
+      esac
+    fi
+    echo -e "\nFinished initializing yacm!";
   fi
 }
 
 function profile() {
   local subcommand=$1;
-  if [[ ! -z $subcommand ]]; then
+  if [[ -n $subcommand ]]; then
     case "$subcommand" in
       help|-h|--help)
         profile_help;;
       list|-l)
-        if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
+        if [ -n "$(ls "$YACM_PROFILES_DIR"/*.yml 2>/dev/null)" ]; then
           echo "Profiles:";
-          for file in $(ls $YACM_PROFILES_DIR/*.yml); do
-            echo "  $(basename $file .yml)";
+          for file in "$YACM_PROFILES_DIR"/*.yml; do
+            echo "  $(basename "$file" .yml)";
           done
         else
           echo -e "\e[31mNo profiles present!\e[0m\n";
@@ -261,35 +242,36 @@ function profile() {
         fi;;
       create|--create)
         echo -e "Creating new profile...";
-        if [ -z $2 ]; then
+        if [ -z "$2" ]; then
           echo "";
-          read -p "What would you like this profile to be called?: " profile_name;
+          read -rp "What would you like this profile to be called?: " profile_name;
         else
           profile_name=$2;
         fi
 
         if [[ ! -f "$YACM_PROFILES_DIR/$profile_name.yml" ]]; then
-          profile_create $profile_name;
+          profile_create "$profile_name";
         else
           echo "Profile already exists!";
-          read -p "Would you like to recreate it? (y/N)" yn;
+          read -rp "Would you like to recreate it? (y/N)" yn;
           case $yn in
             [Yy]*)
-              rm $YACM_PROFILES_DIR/$profile_name.yml;
-              profile_create $profile_name;;
+              rm "$YACM_PROFILES_DIR"/"$profile_name".yml;
+              profile_create "$profile_name";;
             [Nn]*)
               echo -e "\nCancelled profile creation";;
             "")
-              echo "\nCancelled profile creation";;
+              echo -e "\nCancelled profile creation";;
             *)
               echo -e "\e[31mPlease answer yes or no.\e[0m";;
           esac
         fi;;
       default)
         local selected_profile=$2;
-        if [[ ! -z $selected_profile ]]; then
+        if [[ -n $selected_profile ]]; then
           if [[ -f "$YACM_PROFILES_DIR/$selected_profile.yml" ]]; then
-            echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/default_profile;
+            basename "$YACM_PROFILES_DIR"/"$selected_profile".yml .yml > \
+                     "$YACM_DIR"/default_profile;
             echo -e "\nSuccessfully set default profile to \e[32m$selected_profile\e[0m!";
             print_default_warning;
           else
@@ -301,42 +283,43 @@ function profile() {
           echo -e "Currently the following profiles exist:";
           profile list;
           echo -e "\nPlease type the profile you would like to set as the default";
-          read -p "or type the name of a profile you would like to create: " selected_profile;
+          read -rp "or type the name of a profile you would like to create: " selected_profile;
           if [[ -f "$YACM_PROFILES_DIR/$selected_profile.yml" ]]; then
-            echo "$(basename $YACM_PROFILES_DIR/$selected_profile.yml .yml)" > $YACM_DIR/default_profile;
+            basename "$YACM_PROFILES_DIR"/"$selected_profile".yml .yml > \
+                     "$YACM_DIR"/default_profile;
             print_default_warning;
           else
             echo -e "\n\e[31mWarning:\e[0m Profile doesn't currently exist."
-            read -p "Would you like to create it now? (Y/n): " yn;
+            read -rp "Would you like to create it now? (Y/n): " yn;
             case $yn in
               [Yy]*)
                 echo "";
-                profile create $selected_profile;;
+                profile create "$selected_profile";;
               [Nn]*)
                 echo "Keeping current default profile...";;
               "")
                 echo "";
-                profile create $selected_profile;;
+                profile create "$selected_profile";;
               *)
                 echo -e "\e[31mPlease answer yes or no.\e[0m";;
             esac
           fi
         fi;;
       delete|--delete)
-        if [ ! -z "$(ls $YACM_PROFILES_DIR/*.yml 2>/dev/null)" ]; then
-          if [ -z $2 ]; then
+        if [ -n "$(ls "$YACM_PROFILES_DIR"/*.yml 2>/dev/null)" ]; then
+          if [ -z "$2" ]; then
             echo "The following profiles currently exist:";
             profile list;
             echo "";
-            read -p "Which profile would you like to delete?: " profile_name;
+            read -rp "Which profile would you like to delete?: " profile_name;
           else
             profile_name=$2;
           fi
 
           if [[ -f $YACM_PROFILES_DIR/$profile_name.yml ]]; then
-            rm $YACM_PROFILES_DIR/$profile_name.yml;
-            if [[ $(cat $YACM_DIR/default_profile) == $profile_name ]]; then
-              rm $YACM_DIR/default_profile;
+            rm "$YACM_PROFILES_DIR"/"$profile_name".yml;
+            if [[ $(cat "$YACM_DIR"/default_profile) == "$profile_name" ]]; then
+              rm "$YACM_DIR"/default_profile;
             fi
             echo -e "Profile \e[32m$profile_name\e[0m deleted!";
           else
@@ -369,7 +352,7 @@ function install_packages() {
   local __package_manager=$1;
   local __packages=$2;
 
-  if [[ ! -z $__packages ]]; then
+  if [[ -n $__packages ]]; then
     case $__package_manager in
       apt)
         $SUDO apt update && $SUDO apt --yes install $__packages;;
@@ -396,16 +379,16 @@ function enable_services() {
   local __init_system=$1;
   local __services=$2;
 
-  if [[ ! -z $__services ]]; then
+  if [[ -n $__services ]]; then
     case $__init_system in
       systemd)
         echo -e "Enabling service: $service.";
         $SUDO systemctl enable --now $__services;;
       runit)
         for service in $__services; do
-          if [ ! -L /run/runit/service/$service ]; then
+          if [ ! -L /run/runit/service/"$service" ]; then
             echo -e "Enabling service: $service.";
-            $SUDO ln -s /etc/runit/sv/$service /run/runit/service/$service;
+            $SUDO ln -s /etc/runit/sv/"$service" /run/runit/service/"$service";
           fi
         done;;
       *)
@@ -421,7 +404,7 @@ function run_script() {
   local script=$1;
   if [[ -f $YACM_SCRIPTS_DIR/$script ]]; then
     echo -e "\nExecuting: \e[32m$YACM_SCRIPTS_DIR/$script\e[0m...";
-    $YACM_SCRIPTS_DIR/$script;
+    "$YACM_SCRIPTS_DIR"/"$script";
   else
     echo -e "\e[31mError: \e[32m$YACM_SCRIPTS_DIR/$script\e[31m not found!\e[0m";
   fi
@@ -430,63 +413,72 @@ function run_script() {
 function bootstrap_prompt() {
   if [[ $SKIP_CONFIRMATION == 0 ]]; then
     echo -e "\nProfile: \e[32m$1\e[0m selected.";
-    read -p "Would you like to proceed? (Y/n): " yn;
+    read -rp "Would you like to proceed? (Y/n): " yn;
     case $yn in
       [Yy]*)
-        bootstrap_system $1;;
+        bootstrap_system "$1";;
       [Nn]*)
         echo -e "\e[31mAborting system bootstrap...\e[0m";;
       "")
-        bootstrap_system $1;;
+        bootstrap_system "$1";;
       *)
         echo -e "\e[31mPlease answer yes or no.\e[0m";;
     esac
   else
-    bootstrap_system $1;
+    bootstrap_system "$1";
   fi
 }
 
 function bootstrap_system() {
+  local hostname;
+  local initial_scripts;
+  local package_manager;
+  local packages;
+  local midway_scripts;
+  local init_system;
+  local services;
+  local final_scripts;
+
   echo -e "\nBootstrapping system with profile: \e[32m$1\e[0m...";
-  local hostname="$(sed -n -e '/^hostname:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
+  hostname="$(sed -n -e '/^hostname:/p' "$YACM_PROFILES_DIR"/"$1".yml | awk '{print $2}')";
   echo -e "\n\e[32mSetting hostname if specified:\e[0m";
-  set_hostname $hostname;
+  set_hostname "$hostname";
 
   echo -e "\n\e[32mRunning initial scripts if specified:\e[0m";
-  local initial_scripts="$(awk '/^[^ ]/{ f=/^initial_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
-  if [[ ! -z $initial_scripts ]]; then
+  initial_scripts="$(awk '/^[^ ]/{ f=/^initial_scripts:/; next } f{ print packages, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | sed -n -e 's/^ //p')";
+  if [[ -n $initial_scripts ]]; then
     for script in $initial_scripts; do
-      run_script $script;
+      run_script "$script";
     done
   else
     echo "No initial_scripts defined. Skipping...";
   fi
 
   echo -e "\n\e[32mInstalling specified packages with specified package manager:\e[0m";
-  local package_manager="$(sed -n -e '/^package_manager:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
-  local packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
-  install_packages $package_manager "$packages";
+  package_manager="$(sed -n -e '/^package_manager:/p' "$YACM_PROFILES_DIR"/"$1".yml | awk '{print $2}')";
+  packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
+  install_packages "$package_manager" "$packages";
 
   echo -e "\n\e[32mRunning midway scripts if specified:\e[0m";
-  local midway_scripts="$(awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
-  if [[ ! -z $midway_scripts ]]; then
+  midway_scripts="$(awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ print packages, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | sed -n -e 's/^ //p')";
+  if [[ -n $midway_scripts ]]; then
     for script in $midway_scripts; do
-      run_script $script;
+      run_script "$script";
     done
   else
     echo "No midway_scripts defined. Skipping...";
   fi
 
   echo -e "\n\e[32mEnabling specified services with specified init system:\e[0m";
-  local init_system="$(sed -n -e '/^init_system:/p' $YACM_PROFILES_DIR/$1.yml | awk '{print $2}')";
-  local services="$(awk '/^[^ ]/{ f=/^services:/; next } f{ print services, $2 }' $YACM_PROFILES_DIR/$1.yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
-  enable_services $init_system "$services";
+  init_system="$(sed -n -e '/^init_system:/p' "$YACM_PROFILES_DIR"/"$1".yml | awk '{print $2}')";
+  services="$(awk '/^[^ ]/{ f=/^services:/; next } f{ print services, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
+  enable_services "$init_system" "$services";
 
   echo -e "\n\e[32mRunning final scripts if specified:\e[0m";
-  local final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print packages, $2 }' $YACM_PROFILES_DIR/$1.yml | sed -n -e 's/^ //p')";
-  if [[ ! -z $final_scripts ]]; then
+  final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print packages, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | sed -n -e 's/^ //p')";
+  if [[ -n $final_scripts ]]; then
     for script in $final_scripts; do
-      run_script $script;
+      run_script "$script";
     done
   else
     echo "No final_scripts defined. Skipping...";
@@ -504,7 +496,7 @@ function profile_create() {
 
   while [[ -z $host_name ]]; do
     echo "";
-    read -p "What will the hostname of this device be?: " host_name;
+    read -rp "What will the hostname of this device be?: " host_name;
     if [[ -z $host_name ]]; then
       echo "Please provide a hostname.";
     fi
@@ -518,7 +510,7 @@ function profile_create() {
 
   select_services services;
 
-  cat >$YACM_PROFILES_DIR/$profile_name.yml <<EOF
+  cat >"$YACM_PROFILES_DIR"/"$profile_name".yml <<EOF
 ---
 name: ${profile_name}
 hostname: ${host_name}
@@ -548,7 +540,7 @@ EOF
 
   if [[ ! -f $YACM_DIR/default_profile ]]; then
     echo -e "\nIt appears no default profile is currently set.";
-    read -p "Would you like to set one now? (Y/n)" yn;
+    read -rp "Would you like to set one now? (Y/n)" yn;
     case $yn in
       [Yy]*)
         profile default;;
@@ -577,7 +569,7 @@ function select_package_manager() {
 
   while [[ -z $selected_package_manager ]]; do
     print_supported_package_managers;
-    read -p "Which package manager would you like to use?: " prompt;
+    read -rp "Which package manager would you like to use?: " prompt;
     case $prompt in
       "1"|"apt")
         local selected_package_manager="apt";;
@@ -596,7 +588,7 @@ function select_package_manager() {
     esac
   done
 
-  eval $__package_manager="'$selected_package_manager'";
+  eval "$__package_manager"="'$selected_package_manager'";
 }
 
 function select_packages() {
@@ -604,18 +596,18 @@ function select_packages() {
   local package_list="";
 
   echo "";
-  read -p "Please type the package you would like to install or type done to finish: " prompt;
+  read -rp "Please type the package you would like to install or type done to finish: " prompt;
 
   while [[ $prompt != "done" ]]; do
-    if [[ ! -z $prompt ]]; then
+    if [[ -n $prompt ]]; then
       package_list="$package_list
   - $prompt";
     fi
 
-    read -p "Addtional packages (type done to finsh): " prompt;
+    read -rp "Addtional packages (type done to finsh): " prompt;
   done
 
-  eval $__packages="'$package_list'";
+  eval "$__packages"="'$package_list'";
 }
 
 function print_supported_init_systems() {
@@ -629,7 +621,7 @@ function select_init_system() {
 
   while [[ -z $selected_init_system ]]; do
     print_supported_init_systems;
-    read -p "Which init system would you like to use?: " prompt;
+    read -rp "Which init system would you like to use?: " prompt;
     case $prompt in
       "1"|"systemd")
         selected_init_system="systemd";;
@@ -640,7 +632,7 @@ function select_init_system() {
     esac
   done
 
-  eval $__init_system="'$selected_init_system'";
+  eval "$__init_system"="'$selected_init_system'";
 }
 
 function select_services() {
@@ -648,18 +640,18 @@ function select_services() {
   local service_list="";
 
   echo "";
-  read -p "Please type the name of a service you would like to enable or type done to finish: " prompt;
+  read -rp "Please type the name of a service you would like to enable or type done to finish: " prompt;
 
   while [[ $prompt != "done" ]]; do
-    if [[ ! -z $prompt ]]; then
+    if [[ -n $prompt ]]; then
       service_list="$service_list
   - $prompt";
     fi
 
-    read -p "Addtional services (type done to finsh): " prompt;
+    read -rp "Addtional services (type done to finsh): " prompt;
   done
 
-  eval $__services="'$service_list'";
+  eval "$__services"="'$service_list'";
 }
 
 function qualify_path() {
@@ -717,35 +709,40 @@ function set_global_args() {
 
 function set_yacm_defaults() {
   # only set SKIP_CONFIRMATION if it hasn't already be set
-  if [ -z $SKIP_CONFIRMATION ]; then
+  if [ -z "$SKIP_CONFIRMATION" ]; then
     SKIP_CONFIRMATION=0;
   fi
 
   # only set YACM_BASE_DIR if it hasn't already be set
-  if [ -z $YACM_BASE_DIR ]; then
+  if [ -z "$YACM_BASE_DIR" ]; then
     local base_yacm_dir="${XDG_CONFIG_DIR:-$HOME/.config}";
     YACM_BASE_DIR="${base_yacm_dir}";
   fi
 
   # only set YACM_DIR if it hasn't already be set
-  if [ -z $YACM_DIR ]; then
+  if [ -z "$YACM_DIR" ]; then
     YACM_DIR="${YACM_BASE_DIR}/yacm";
   fi
 
   # only set YACM_PROFILES_DIR if it hasn't already be set
-  if [ -z $YACM_PROFILES_DIR ]; then
+  if [ -z "$YACM_PROFILES_DIR" ]; then
     YACM_PROFILES_DIR="${YACM_DIR}/profiles";
   fi
 
   # only set YACM_SCRIPTS_DIR if it hasn't already be set
-  if [ -z $YACM_SCRIPTS_DIR ]; then
+  if [ -z "$YACM_SCRIPTS_DIR" ]; then
     YACM_SCRIPTS_DIR="${YACM_DIR}/scripts";
   fi
 }
 
 function load_config() {
+  local config_file_yacm_base_dir;
+  local config_file_yacm_dir;
+  local config_file_yacm_profiles_dir;
+  local config_file_yacm_scripts_dir;
+
   if [[ ! -f $YACM_DIR/config.yml ]]; then
-    cat >$YACM_DIR/config.yml <<EOF
+    cat >"$YACM_DIR"/config.yml <<EOF
 ---
 # Configuration for yacm
 
@@ -756,10 +753,10 @@ function load_config() {
 # yacm_scripts_dir: ${YACM_DIR}/scripts
 EOF
   else
-    local config_file_yacm_base_dir="$(sed -n -e '/^yacm_base_dir:/p' $YACM_DIR/config.yml | awk '{print $2}')";
-    local config_file_yacm_dir="$(sed -n -e '/^yacm_dir:/p' $YACM_DIR/config.yml | awk '{print $2}')";
-    local config_file_yacm_profiles_dir="$(sed -n -e '/^yacm_profiles_dir:/p' $YACM_DIR/config.yml | awk '{print $2}')";
-    local config_file_yacm_scripts_dir="$(sed -n -e '/^yacm_scripts_dir:/p' $YACM_DIR/config.yml | awk '{print $2}')";
+    config_file_yacm_base_dir="$(sed -n -e '/^yacm_base_dir:/p' "$YACM_DIR"/config.yml | awk '{print $2}')";
+    config_file_yacm_dir="$(sed -n -e '/^yacm_dir:/p' "$YACM_DIR"/config.yml | awk '{print $2}')";
+    config_file_yacm_profiles_dir="$(sed -n -e '/^yacm_profiles_dir:/p' "$YACM_DIR"/config.yml | awk '{print $2}')";
+    config_file_yacm_scripts_dir="$(sed -n -e '/^yacm_scripts_dir:/p' "$YACM_DIR"/config.yml | awk '{print $2}')";
     YACM_BASE_DIR="${config_file_yacm_base_dir:-$YACM_BASE_DIR}";
     YACM_DIR="${config_file_yacm_dir:-$YACM_DIR}";
     YACM_PROFILES_DIR="${config_file_yacm_profiles_dir:-$YACM_PROFILES_DIR}";

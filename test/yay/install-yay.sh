@@ -6,7 +6,7 @@ if [ $? -ne 0 ];
 then
   sudo pacman -Sy git base-devel --needed --noconfirm;
   git clone https://aur.archlinux.org/yay-bin.git;
-  cd yay-bin;
+  cd yay-bin || exit;
   makepkg -si --noconfirm;
   cd ..;
   rm -rf yay-bin;

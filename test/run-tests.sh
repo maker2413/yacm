@@ -13,7 +13,7 @@ function wait_for_bootstrap() {
   local found=0;
   local timer=0;
 
-  while [[ "$found" == 0 && "$timer" -lt 600 ]]; do
+  while [[ "$found" == 0 && "$timer" < 600 ]]; do
     echo "Waiting for bootstrap to complete...";
 
     sleep 5;

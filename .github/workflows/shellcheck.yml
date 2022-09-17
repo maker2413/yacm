@@ -13,4 +13,5 @@ jobs:
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@1.1.0
         with:
+          ignore_names: run-tests.sh
           severity: warning

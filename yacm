@@ -17,9 +17,6 @@ if [[ $EUID != 0 ]]; then
 fi
 
 function main() {
-  # Capture full command, for passing to hooks
-  # the parameters will be space delimited and
-  # spaces, tabs, and backslashes will be escaped
   _tab=$'\t'
   for param in "$@"; do
     param="${param//\\/\\\\}"
@@ -401,13 +398,26 @@ function enable_services() {
 }
 
 function run_script() {
-  local script=$1;
-  if [[ -f $YACM_SCRIPTS_DIR/$script ]]; then
-    echo -e "\nExecuting: \e[32m$YACM_SCRIPTS_DIR/$script\e[0m...";
-    "$YACM_SCRIPTS_DIR"/"$script";
+  local command=$1;
+  if [[ $(echo $command | awk '{print NF}') -ge 2 ]]; then
+    local script=$(echo $command | awk '{print $1}');
+    local input=$(echo $command | awk '{ for (i=2; i<=NF; i++) printf "%s%s", $i, (i<NF ? OFS : ORS)}');
+    if [[ -f $YACM_SCRIPTS_DIR/$script ]]; then
+      echo -e "\nExecuting: \e[32m$YACM_SCRIPTS_DIR/$script\e[0m...";
+      "$YACM_SCRIPTS_DIR"/"$script" "$input";
+    else
+      echo -e "\e[31mError: \e[32m$YACM_SCRIPTS_DIR/$script\e[31m not found!\e[0m";
+    fi
   else
-    echo -e "\e[31mError: \e[32m$YACM_SCRIPTS_DIR/$script\e[31m not found!\e[0m";
+    local script=$command;
+    if [[ -f $YACM_SCRIPTS_DIR/$script ]]; then
+      echo -e "\nExecuting: \e[32m$YACM_SCRIPTS_DIR/$script\e[0m...";
+      "$YACM_SCRIPTS_DIR"/"$script";
+    else
+      echo -e "\e[31mError: \e[32m$YACM_SCRIPTS_DIR/$script\e[31m not found!\e[0m";
+    fi
   fi
+
 }
 
 function bootstrap_prompt() {
@@ -445,9 +455,8 @@ function bootstrap_system() {
   set_hostname "$hostname";
 
   echo -e "\n\e[32mRunning initial scripts if specified:\e[0m";
-  initial_scripts="$(awk '/^[^ ]/{ f=/^initial_scripts:/; next } f{ print packages, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | sed -n -e 's/^ //p')";
-  if [[ -n $initial_scripts ]]; then
-    for script in $initial_scripts; do
+  if [[ $(grep '^initial_scripts' "$YACM_PROFILES_DIR"/"$1".yml) ]]; then
+    awk '/^[^ ]/{ f=/^initial_scripts:/; next } f{ for (i=2; i<=NF; i++) printf "%s%s", $i, (i<NF ? OFS : ORS)}' "$YACM_PROFILES_DIR"/"$1".yml | while read script; do
       run_script "$script";
     done
   else
@@ -460,14 +469,22 @@ function bootstrap_system() {
   install_packages "$package_manager" "$packages";
 
   echo -e "\n\e[32mRunning midway scripts if specified:\e[0m";
-  midway_scripts="$(awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ print packages, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | sed -n -e 's/^ //p')";
-  if [[ -n $midway_scripts ]]; then
-    for script in $midway_scripts; do
+  if [[ $(grep '^midway_scripts' "$YACM_PROFILES_DIR"/"$1".yml) ]]; then
+    awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ for (i=2; i<=NF; i++) printf "%s%s", $i, (i<NF ? OFS : ORS)}' "$YACM_PROFILES_DIR"/"$1".yml | while read script; do
       run_script "$script";
     done
   else
     echo "No midway_scripts defined. Skipping...";
   fi
+
+  # midway_scripts="$(awk '/^[^ ]/{ f=/^midway_scripts:/; next } f{ print midway_scripts, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | sed -n -e 's/^ //p')";
+  # if [[ -n $midway_scripts ]]; then
+  #   for script in $midway_scripts; do
+  #     run_script "$script";
+  #   done
+  # else
+  #   echo "No midway_scripts defined. Skipping...";
+  # fi
 
   echo -e "\n\e[32mEnabling specified services with specified init system:\e[0m";
   init_system="$(sed -n -e '/^init_system:/p' "$YACM_PROFILES_DIR"/"$1".yml | awk '{print $2}')";
@@ -475,14 +492,22 @@ function bootstrap_system() {
   enable_services "$init_system" "$services";
 
   echo -e "\n\e[32mRunning final scripts if specified:\e[0m";
-  final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print packages, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | sed -n -e 's/^ //p')";
-  if [[ -n $final_scripts ]]; then
-    for script in $final_scripts; do
+  if [[ $(grep '^final_scripts' "$YACM_PROFILES_DIR"/"$1".yml) ]]; then
+    awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ for (i=2; i<=NF; i++) printf "%s%s", $i, (i<NF ? OFS : ORS)}' "$YACM_PROFILES_DIR"/"$1".yml | while read script; do
       run_script "$script";
     done
   else
     echo "No final_scripts defined. Skipping...";
   fi
+
+  # final_scripts="$(awk '/^[^ ]/{ f=/^final_scripts:/; next } f{ print final_scripts, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | sed -n -e 's/^ //p')";
+  # if [[ -n $final_scripts ]]; then
+  #   for script in $final_scripts; do
+  #     run_script "$script";
+  #   done
+  # else
+  #   echo "No final_scripts defined. Skipping...";
+  # fi
 
   echo -e "\n\e[32mBootstrap complete!\e[0m";
 }
@@ -519,6 +544,7 @@ hostname: ${host_name}
 # that you would like to have run before moving on to
 # package installation.
 # initial_scripts:
+#   -
 
 package_manager: ${package_manager}
 packages:${packages}
@@ -527,6 +553,7 @@ packages:${packages}
 # that you would like to have run before moving on to
 # enabling services.
 # midway_scripts:
+#   -
 
 init_system: ${init_system}
 services:${services}
@@ -535,6 +562,7 @@ services:${services}
 # that you would like to have run as a final bootstrap
 # step.
 # final_scripts:
+#   -
 EOF
   echo -e "\nCreated \e[32m$profile_name\e[0m profile!";
 

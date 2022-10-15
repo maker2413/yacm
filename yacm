@@ -436,13 +436,10 @@ function bootstrap_prompt() {
 
 function bootstrap_system() {
   local hostname;
-  local initial_scripts;
   local package_manager;
   local packages;
-  local midway_scripts;
   local init_system;
   local services;
-  local final_scripts;
 
   echo -e "\nBootstrapping system with profile: \e[32m$1\e[0m...";
   hostname="$(sed -n -e '/^hostname:/p' "$YACM_PROFILES_DIR"/"$1".yml | awk '{print $2}')";
@@ -450,7 +447,7 @@ function bootstrap_system() {
   set_hostname "$hostname";
 
   echo -e "\n\e[32mRunning initial scripts if specified:\e[0m";
-  run_scripts "initial_scripts" $1;
+  run_scripts "initial_scripts" "$1";
 
   echo -e "\n\e[32mInstalling specified packages with specified package manager:\e[0m";
   package_manager="$(sed -n -e '/^package_manager:/p' "$YACM_PROFILES_DIR"/"$1".yml | awk '{print $2}')";
@@ -458,7 +455,7 @@ function bootstrap_system() {
   install_packages "$package_manager" "$packages";
 
   echo -e "\n\e[32mRunning midway scripts if specified:\e[0m";
-  run_scripts "midway_scripts" $1;
+  run_scripts "midway_scripts" "$1";
 
   echo -e "\n\e[32mEnabling specified services with specified init system:\e[0m";
   init_system="$(sed -n -e '/^init_system:/p' "$YACM_PROFILES_DIR"/"$1".yml | awk '{print $2}')";
@@ -466,7 +463,7 @@ function bootstrap_system() {
   enable_services "$init_system" "$services";
 
   echo -e "\n\e[32mRunning final scripts if specified:\e[0m";
-  run_scripts "final_scripts" $1;
+  run_scripts "final_scripts" "$1";
 
   echo -e "\e[32mBootstrap complete!\e[0m";
 }

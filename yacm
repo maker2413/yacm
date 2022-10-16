@@ -411,7 +411,7 @@ function run_scripts() {
       eval $script;
     done
   else
-    echo -e "\e[31mNo $profile defined. Skipping...\e[0m";
+    echo -e "\e[31mNo $phase defined. Skipping...\e[0m";
   fi
 }
 

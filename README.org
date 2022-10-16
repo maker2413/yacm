@@ -16,7 +16,12 @@ command similar to:
 #+begin_src bash
   curl -fLo /usr/local/bin/yacm https://github.com/maker2413/yacm/raw/master/yacm && chmod a+x /usr/local/bin/yacm
 #+end_src
-Of course you can alter the file paths in the above command to match your
+
+Or to download the latest release a command similar to:
+#+begin_src bash
+  curl -fLo /usr/local/bin/yacm https://github.com/maker2413/yacm/releases/latest/download/yacm && chmod a+x /usr/local/bin/yacm
+#+end_src
+Of course you can alter the file paths in the above commands to match your
 current setup for ~$PATH~.
 
 ** Clone
@@ -25,7 +30,7 @@ symlink to a directory currently in your ~$PATH~. It could be done with the
 following:
 #+begin_src bash
 git clone https://github.com/maker2413/yacm.git ~/.yacm-project
-ln -s ~/.yacm-project/yadm ~/bin/yacm
+ln -s ~/.yacm-project/yacm ~/bin/yacm
 #+end_src
 Of course again the above can be altered to match your current setup for
 ~$PATH~. The pros of installing yacm with this method is you can update yacm by
@@ -60,9 +65,3 @@ systems you can easily check in all of your system profiles and executables into
 a repository to have an easy way to redeploy any of your systems. By default
 profiles and executables will be stored in ~$HOME/.config/yacm/~ so these can be
 checked into a repository where you store your dotfiles if you do that.
-
-* TODO List
-  The following is a list of features not currently present in yacm:
-  - Secrets: It is almost a must that yacm has a built in way to encrypt certain
-    files or values in their yacm directory for them to be safely commited to a
-    repository.

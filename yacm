@@ -25,7 +25,8 @@ function main() {
     _fc+=( "$param" )
   done
 
-  # Create the YACM_DIR & YACM_DATA if they doesn't exist yet
+  # Create YACM_DIR, YACM_BASE_DIR, YACM_PROFILES_DIR, and YACM_SCRIPTS_DIR
+  # if they doesn't exist yet
   [ -d "$YACM_BASE_DIR" ] || mkdir -p "$YACM_BASE_DIR"
   [ -d "$YACM_DIR" ] || mkdir -p "$YACM_DIR"
   [ -d "$YACM_PROFILES_DIR" ] || mkdir -p "$YACM_PROFILES_DIR"
@@ -197,25 +198,31 @@ function init() {
     esac
   else
     echo -e "Initializng yacm...";
-    if [ ! -f "$YACM_DIR"/default_profile ]; then
-      echo "";
-      profile default;
+    if [ -n "$(ls "$YACM_PROFILES_DIR"/*.yml 2>/dev/null)" ]; then
+      if [ ! -f "$YACM_DIR"/default_profile ]; then
+        echo "";
+        profile default;
+      else
+        local current_default;
+
+        echo -e "\nThe current default is set to:";
+        current_default=$(head -n 1 "$YACM_DIR"/default_profile);
+        echo -e "  \e[32m$current_default\e[0m";
+        read -rp "Would you like to change the defaul profile? (y/N)" yn;
+        case $yn in
+          [Yy]*)
+            echo "";
+            profile default;;
+          [Nn]*)
+            echo "Keeping current default profile...";;
+          "")
+            echo "Keeping current default profile...";;
+          *)
+            echo -e "\e[31mPlease answer yes or no.\e[0m";;
+        esac
+      fi
     else
-      echo -e "\nThe current default is set to:";
-      head -n 1 "$YACM_DIR"/default_profile;
-      echo "";
-      read -rp "Would you like to change the defaul profile? (y/N)" yn;
-      case $yn in
-        [Yy]*)
-          echo "";
-          profile default;;
-        [Nn]*)
-          echo "Keeping current default profile...";;
-        "")
-          echo "Keeping current default profile...";;
-        *)
-          echo -e "\e[31mPlease answer yes or no.\e[0m";;
-      esac
+      profile create;
     fi
     echo -e "\nFinished initializing yacm!";
   fi
@@ -229,13 +236,18 @@ function profile() {
         profile_help;;
       list|-l)
         if [ -n "$(ls "$YACM_PROFILES_DIR"/*.yml 2>/dev/null)" ]; then
+          local current_default;
+
           echo "Profiles:";
           for file in "$YACM_PROFILES_DIR"/*.yml; do
             echo "  $(basename "$file" .yml)";
           done
+          echo -e "\nThe current default is set to:";
+          current_default=$(head -n 1 "$YACM_DIR"/default_profile);
+          echo -e "  \e[32m$current_default\e[0m\n";
         else
           echo -e "\e[31mNo profiles present!\e[0m\n";
-          echo -e "\e[31mPleace run \e[32myacm init\e[31m!\e[0m";
+          echo -e "\e[31mPlease run \e[32myacm init\e[31m!\e[0m";
         fi;;
       create|--create)
         echo -e "Creating new profile...";
@@ -279,7 +291,7 @@ function profile() {
         else
           echo -e "Currently the following profiles exist:";
           profile list;
-          echo -e "\nPlease type the profile you would like to set as the default";
+          echo -e "Please type the profile you would like to set as the default";
           read -rp "or type the name of a profile you would like to create: " selected_profile;
           if [[ -f "$YACM_PROFILES_DIR/$selected_profile.yml" ]]; then
             basename "$YACM_PROFILES_DIR"/"$selected_profile".yml .yml > \
@@ -722,6 +734,10 @@ function load_config() {
   local config_file_yacm_dir;
   local config_file_yacm_profiles_dir;
   local config_file_yacm_scripts_dir;
+
+  # Create the YACM_DIR & YACM_BASE_DIR if they doesn't exist yet
+  [ -d "$YACM_BASE_DIR" ] || mkdir -p "$YACM_BASE_DIR"
+  [ -d "$YACM_DIR" ] || mkdir -p "$YACM_DIR"
 
   if [[ ! -f $YACM_DIR/config.yml ]]; then
     cat >"$YACM_DIR"/config.yml <<EOF

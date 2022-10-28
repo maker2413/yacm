@@ -242,9 +242,14 @@ function profile() {
           for file in "$YACM_PROFILES_DIR"/*.yml; do
             echo "  $(basename "$file" .yml)";
           done
+
           echo -e "\nThe current default is set to:";
-          current_default=$(head -n 1 "$YACM_DIR"/default_profile);
-          echo -e "  \e[32m$current_default\e[0m\n";
+          if [ -f "$YACM_DIR"/default_profile ]; then
+            current_default=$(head -n 1 "$YACM_DIR"/default_profile);
+            echo -e "  \e[32m$current_default\e[0m\n";
+          else
+            echo -e "  \e[31mNo default profile currently set\e[0m";
+          fi
         else
           echo -e "\e[31mNo profiles present!\e[0m\n";
           echo -e "\e[31mPlease run \e[32myacm init\e[31m!\e[0m";
@@ -291,7 +296,7 @@ function profile() {
         else
           echo -e "Currently the following profiles exist:";
           profile list;
-          echo -e "Please type the profile you would like to set as the default";
+          echo -e "\nPlease type the profile you would like to set as the default";
           read -rp "or type the name of a profile you would like to create: " selected_profile;
           if [[ -f "$YACM_PROFILES_DIR/$selected_profile.yml" ]]; then
             basename "$YACM_PROFILES_DIR"/"$selected_profile".yml .yml > \
@@ -391,13 +396,15 @@ function enable_services() {
   if [[ -n $__services ]]; then
     case $__init_system in
       systemd)
-        echo -e "Enabling service: $service.";
+        echo -e "Enabling service: \e[32m$service\e[0m...";
         $SUDO systemctl enable --now $__services;;
       runit)
         for service in $__services; do
           if [ ! -L /run/runit/service/"$service" ]; then
-            echo -e "Enabling service: $service.";
+            echo -e "Enabling service: \e[32m$service\e[0m...";
             $SUDO ln -s /etc/runit/sv/"$service" /run/runit/service/"$service";
+          else
+            echo -e "\e[32m$service\e[0m already enabled, skipping...";
           fi
         done;;
       *)

@@ -17,11 +17,8 @@ jobs:
       # Bump version on merging Pull Requests with specific labels.
       # (bump:major,bump:minor,bump:patch)
       - name: Create Tag
+        id: action-bumpr
         uses: haya14busa/action-bumpr@v1
-
-      - name: Set env
-        if: ${{ github.ref == 'refs/heads/master' }}
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Create Release
         if: ${{ github.ref == 'refs/heads/master' }}
@@ -30,8 +27,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.RELEASE_VERSION }}
-          release_name: Release ${{ env.RELEASE_VERSION }}
+          tag_name: ${{ steps.action-bumpr.outputs.next_version }}
+          release_name: ${{ steps.action-bumpr.outputs.next_version }}
           draft: false
           prerelease: false
 

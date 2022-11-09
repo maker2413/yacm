@@ -1,0 +1,45 @@
+name: Create Tag
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types:
+      - labeled
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Bump version on merging Pull Requests with specific labels.
+      # (bump:major,bump:minor,bump:patch)
+      - name: Create Tag
+        id: action-bumpr
+        uses: haya14busa/action-bumpr@v1
+
+      - name: Create Release
+        if: ${{ github.ref == 'refs/heads/master' }}
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.action-bumpr.outputs.next_version }}
+          release_name: ${{ steps.action-bumpr.outputs.next_version }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        if: ${{ github.ref == 'refs/heads/master' }}
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./yacm
+          asset_name: yacm
+          asset_content_type: application/zip

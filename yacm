@@ -368,7 +368,7 @@ function install_packages() {
 
   if [[ -n $__packages ]]; then
     case $__package_manager in
-      apt)
+      apt|apt-get)
         $SUDO apt update && $SUDO apt --yes install $__packages;;
       dnf)
         $SUDO dnf install -y $__packages;;
@@ -572,7 +572,7 @@ function select_package_manager() {
     print_supported_package_managers;
     read -rp "Which package manager would you like to use?: " prompt;
     case $prompt in
-      "1"|"apt")
+      "1"|"apt"|"apt-get")
         local selected_package_manager="apt";;
       "2"|"dnf")
         local selected_package_manager="dnf";;

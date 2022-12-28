@@ -6,27 +6,40 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
 run-all-tests:
 	@$(MAKE) -f $(THIS_FILE) \
-		TEST=systemd run-tests && \
+		run-all-system-tests;
+
+run-all-prompt-tests:
+	@$(MAKE) -f $(THIS_FILE) \
+		TEST=list run-prompt-tests;
+
+run-prompt-tests:
+	@$(MAKE) -f $(THIS_FILE) \
+		build-test-base && \
+	./test/run-prompt-tests.sh;
+
+run-all-system-tests:
+	@$(MAKE) -f $(THIS_FILE) \
+		TEST=systemd run-system-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=runit run-tests && \
+		TEST=runit run-system-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=apt run-tests && \
+		TEST=apt run-system-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=dnf run-tests && \
+		TEST=dnf run-system-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=pacman run-tests && \
+		TEST=pacman run-system-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=paru run-tests && \
+		TEST=paru run-system-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=yay run-tests && \
+		TEST=yay run-system-tests && \
 	$(MAKE) -f $(THIS_FILE) \
-		TEST=yum run-tests;
+		TEST=yum run-system-tests;
+
+run-system-tests:
+	@$(MAKE) -f $(THIS_FILE) \
+		build-test-base && \
+	./test/run-system-tests.sh;
 
 build-test-base:
 	@podman build \
 		-t yacm-base .;
-
-run-tests:
-	@$(MAKE) -f $(THIS_FILE) \
-		build-test-base && \
-	./test/run-tests.sh;

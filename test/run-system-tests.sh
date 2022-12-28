@@ -27,7 +27,7 @@ function wait_for_bootstrap() {
 }
 
 podman build \
-       -t yacm-$TEST ./$TEST;
+       -t yacm-$TEST ./system-tests/$TEST;
 
 case "$TEST" in
   systemd)

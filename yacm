@@ -159,8 +159,8 @@ function bootstrap() {
   local subcommand=$1;
   if [[ -z $subcommand ]]; then
     echo "Checking current default profile...";
-    default_profile="$(cat "$YACM_DIR"/default_profile 2>/dev/null)";
     if [[ -f $YACM_PROFILES_DIR/$default_profile.yml ]]; then
+      default_profile="$(cat "$YACM_DIR"/default_profile 2>/dev/null)";
       bootstrap_prompt "$default_profile";
     else
       echo -e "\n\e[31mNo default profile currently set!.\e[0m";
@@ -389,6 +389,16 @@ function install_packages() {
   fi
 }
 
+function install_flatpaks() {
+  local __flatpaks=$1
+
+  if [[ -n $__flatpaks ]]; then
+    flatpak install --noninteractive $__flatpaks;
+  else
+    echo "No flatpaks provided. Skipping over flatpak package installation...";
+  fi
+}
+
 function enable_services() {
   local __init_system=$1;
   local __services=$2;
@@ -475,6 +485,10 @@ function bootstrap_system() {
   packages="$(awk '/^[^ ]/{ f=/^packages:/; next } f{ print packages, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
   install_packages "$package_manager" "$packages";
 
+  echo -e "\n\e[32mInstalling specified flatpak packages:\e[0m";
+  flatpaks="$(awk '/^[^ ]/{ f=/^flatpak:/; next } f{ print flatpak, $2 }' "$YACM_PROFILES_DIR"/"$1".yml | tr -d '\n' | sed -n -e 's/^ //' -e 's/ $//p')";
+  install_flatpaks "$flatpaks";
+
   echo -e "\n\e[32mRunning midway scripts if specified:\e[0m";
   run_scripts "midway_scripts" "$1";
 
@@ -524,6 +538,10 @@ hostname: ${host_name}
 
 package_manager: ${package_manager}
 packages:${packages}
+
+# Here you can define any flatpak packages you want to install
+# flatpak:
+#   -
 
 # Here you can define any custom made executable scripts or commands that
 # you would like to have run before moving on to enabling services.

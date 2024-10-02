@@ -1,0 +1,22 @@
+* Changelog
+  All notable changes to this project will be documented in this file.
+
+  The format is based on [[https://keepachangelog.com/en/1.1.0/][Keep a Changelog]], and this project adheres to
+  [[https://semver.org/spec/v2.0.0.html][Semantic Versioning]].
+
+** [Unreleased]
+
+** [0.2.0] - 2024-10-2
+
+*** Added
+    - Support for flatpak management
+
+*** Fixed
+    - CI/CD to test package management
+    - Enabling multiple daemons at once with systemd
+
+*** Changed
+    - Some of the naming and file locations in the CI/CD
+
+** [0.1.3] - 2022-11-15
+   First serious release of yacm. At this point is it technically usable.

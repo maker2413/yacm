@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run systemd tests
-        run: TEST=systemd make run-tests
+        run: TEST=systemd make run-system-tests
 
   test-runit:
     runs-on: ubuntu-latest
@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run runit test
-        run: TEST=runit make run-tests
+        run: TEST=runit make run-system-tests
 
   test-apt:
     runs-on: ubuntu-latest
@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run apt tests
-        run: TEST=apt make run-tests
+        run: TEST=apt make run-system-tests
 
   test-dnf:
     runs-on: ubuntu-latest
@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run dnf tests
-        run: TEST=dnf make run-tests
+        run: TEST=dnf make run-system-tests
 
   test-pacman:
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run pacman tests
-        run: TEST=pacman make run-tests
+        run: TEST=pacman make run-system-tests
 
   test-paru:
     runs-on: ubuntu-latest
@@ -61,7 +61,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run paru tests
-        run: TEST=paru make run-tests
+        run: TEST=paru make run-system-tests
 
   test-yay:
     runs-on: ubuntu-latest
@@ -71,7 +71,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run yay tests
-        run: TEST=yay make run-tests
+        run: TEST=yay make run-system-tests
 
   test-yum:
     runs-on: ubuntu-latest
@@ -81,4 +81,4 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run yum tests
-        run: TEST=yum make run-tests
+        run: TEST=yum make run-system-tests

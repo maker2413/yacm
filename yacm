@@ -159,9 +159,15 @@ function bootstrap() {
   local subcommand=$1;
   if [[ -z $subcommand ]]; then
     echo "Checking current default profile...";
-    if [[ -f $YACM_PROFILES_DIR/$default_profile.yml ]]; then
+    if [[ -f $YACM_DIR/default_profile ]]; then
       default_profile="$(cat "$YACM_DIR"/default_profile 2>/dev/null)";
-      bootstrap_prompt "$default_profile";
+      if [[ -f $YACM_PROFILES_DIR/$default_profile.yml ]]; then
+        bootstrap_prompt "$default_profile";
+      else
+        echo -e "\n\e[31mSpecified default profile, \e[32m$default_profile\e[31m, doesn't exist!.\e[0m";
+        echo -e "Please run: \e[32myacm profile default\e[0m to set default for this system or";
+        echo -e "run: \e[32myacm bootstrap profile [profile_name]\e[0m to specify which profile to use.";
+      fi
     else
       echo -e "\n\e[31mNo default profile currently set!.\e[0m";
       echo -e "Please run: \e[32myacm profile default\e[0m to set default for this system or";

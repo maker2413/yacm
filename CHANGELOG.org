@@ -6,6 +6,12 @@
 
 ** [Unreleased]
 
+** [0.2.1] - 2024-10-3
+
+*** Fixed
+    - A bug where bootstrapping was broken if a default profile was not already
+      set. 
+
 ** [0.2.0] - 2024-10-2
 
 *** Added

@@ -24,4 +24,7 @@ func Execute() {
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(profileCmd)
+	rootCmd.AddCommand(bootstrapCmd)
 }

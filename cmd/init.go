@@ -16,3 +16,7 @@ current system init will kick off the creation of a new configuration profile.`,
 		fmt.Println("init...")
 	},
 }
+
+func init() {
+	rootCmd.AddCommand(initCmd)
+}

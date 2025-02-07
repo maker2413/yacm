@@ -14,3 +14,7 @@ var bootstrapCmd = &cobra.Command{
 		fmt.Println("Bootstrap...")
 	},
 }
+
+func init() {
+	rootCmd.AddCommand(bootstrapCmd)
+}

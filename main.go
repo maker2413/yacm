@@ -1,7 +1,16 @@
 package main
 
-import "github.com/maker2413/yacm/cmd"
+import (
+	"os"
+
+	"github.com/maker2413/yacm/cmd"
+)
+
+const version string = "v0.3.0"
 
 func main() {
-	cmd.Execute()
+	err := cmd.Execute(version)
+	if err != nil {
+		os.Exit(1)
+	}
 }

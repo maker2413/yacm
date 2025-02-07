@@ -14,3 +14,7 @@ var profileCmd = &cobra.Command{
 		fmt.Println("profile...")
 	},
 }
+
+func init() {
+	rootCmd.AddCommand(profileCmd)
+}

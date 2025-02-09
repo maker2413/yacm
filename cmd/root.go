@@ -60,9 +60,4 @@ func initConfig() {
 
 	// read in environment variables that match
 	viper.AutomaticEnv()
-
-	fmt.Println(viper.GetString("yacm_base_dir"))
-	fmt.Println(viper.GetString("yacm_dir"))
-	fmt.Println(viper.GetString("yacm_profiles_dir"))
-	fmt.Println(viper.GetString("yacm_scripts_dir"))
 }

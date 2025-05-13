@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/maker2413/yacm/cmd/profiles"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var initCmd = &cobra.Command{
@@ -12,8 +14,20 @@ var initCmd = &cobra.Command{
 	Long: `The init command will prompt the user to set a default configuration profile for
 the current system. If the user doesn't have an existing profile that they want to use for the
 current system init will kick off the creation of a new configuration profile.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init...")
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println(viper.GetString("yacm_profiles_dir"))
+		files, err := profiles.GetProfiles()
+		if err != nil {
+			return err
+		}
+
+		for _, p := range files {
+			fmt.Println(p)
+		}
+
+		fmt.Println(profiles.ProfilesExist())
+
+		return nil
 	},
 }
 

@@ -1,9 +1,9 @@
-package cmd
+package app
 
 import (
 	"fmt"
 
-	"github.com/maker2413/yacm/cmd/profiles"
+	"github.com/maker2413/yacm/internal/profiles"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -16,16 +16,17 @@ the current system. If the user doesn't have an existing profile that they want 
 current system init will kick off the creation of a new configuration profile.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println(viper.GetString("yacm_profiles_dir"))
-		files, err := profiles.GetProfiles()
+		p, err := profiles.Init()
 		if err != nil {
 			return err
 		}
 
+		files := p.GetProfiles()
 		for _, p := range files {
 			fmt.Println(p)
 		}
 
-		fmt.Println(profiles.ProfilesExist())
+		fmt.Println(p.Exist())
 
 		return nil
 	},

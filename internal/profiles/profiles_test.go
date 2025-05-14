@@ -10,8 +10,8 @@ func TestProfiles(t *testing.T) {
 	p := Profiles{}
 	assert.NotNil(t, p)
 
-	t.Run("GetProfiles", func(t *testing.T) {
-		err := p.GetProfiles()
+	t.Run("loadProfiles", func(t *testing.T) {
+		err := p.loadProfiles()
 		assert.NoError(t, err)
 	})
 }

@@ -11,7 +11,17 @@ type Profiles struct {
 	profiles map[string]SystemProfile
 }
 
-func (p *Profiles) GetProfiles() error {
+func Init() (Profiles, error) {
+	p := Profiles{}
+	err := p.loadProfiles()
+	if err != nil {
+		return Profiles{}, err
+	}
+
+	return p, nil
+}
+
+func (p *Profiles) loadProfiles() error {
 	files, err := os.ReadDir(viper.GetString("yacm_profiles_dir"))
 	if err != nil {
 		return err
@@ -26,8 +36,12 @@ func (p *Profiles) GetProfiles() error {
 	return nil
 }
 
+func (p Profiles) GetProfiles() map[string]SystemProfile {
+	return p.profiles
+}
+
 func (p *Profiles) Exist() bool {
-	err := p.GetProfiles()
+	err := p.loadProfiles()
 	if err != nil {
 		return false
 	}

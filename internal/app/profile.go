@@ -6,10 +6,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var profileCmd = &cobra.Command{
-	Use:   "profile",
-	Short: "Configuration profile creation, deletion, and management",
-	Long: `Used to create and manage yacm profiles
+func NewProfileCmd() *cobra.Command {
+	profileCmd := &cobra.Command{
+		Use:   "profile",
+		Short: "Configuration profile creation, deletion, and management",
+		Long: `Used to create and manage yacm profiles
 
 Subcommands:
   create  - Creates a new profile
@@ -24,11 +25,10 @@ Alternative subcommands:
   -h      - Prints this menu
   -l      - List profiles on system
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("profile...")
-	},
-}
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("profile...")
+		},
+	}
 
-func init() {
-	rootCmd.AddCommand(profileCmd)
+	return profileCmd
 }

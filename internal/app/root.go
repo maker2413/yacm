@@ -11,26 +11,29 @@ import (
 
 var cfgFile string
 
-var rootCmd = &cobra.Command{
-	Use:   "yacm",
-	Short: "yacm (Yet Another Configuration Manager)",
-	Long: `yacm is a CLI tool that allows users to configure and manage all of their
+func NewRootCmd(version string) *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "yacm",
+		Short: "yacm (Yet Another Configuration Manager)",
+		Long: `yacm is a CLI tool that allows users to configure and manage all of their
 computers with simple yaml manifests.`,
-}
-
-func Execute(version string) error {
-	rootCmd.Version = version
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		return err
 	}
 
-	return nil
-}
+	rootCmd.Version = version
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
+		"config file (default is $HOME/.config/yacm/config.yml)")
 
-func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/yacm/config.yml)")
 	cobra.OnInitialize(initConfig)
+
+	rootCmd.AddCommand(NewVersionCmd())
+
+	rootCmd.AddCommand(NewBootstrapCmd())
+
+	rootCmd.AddCommand(NewInitCmd())
+
+	rootCmd.AddCommand(NewProfileCmd())
+
+	return rootCmd
 }
 
 func initConfig() {

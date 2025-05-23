@@ -9,8 +9,9 @@ import (
 const version string = "v0.3.0"
 
 func main() {
-	err := app.Execute(version)
-	if err != nil {
+	root := app.NewRootCmd(version)
+
+	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
 }

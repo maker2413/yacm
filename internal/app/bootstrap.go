@@ -16,10 +16,14 @@ set profile or with the profile specified.
 Subcommands:
   profile - Used to specify which profile to use
 `,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Bootstrap...")
-		},
+		RunE: bootstrap,
 	}
 
 	return bootstrapCmd
+}
+
+func bootstrap(cmd *cobra.Command, args []string) error {
+	fmt.Println("Bootstrap...")
+
+	return nil
 }

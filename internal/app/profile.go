@@ -25,10 +25,14 @@ Alternative subcommands:
   -h      - Prints this menu
   -l      - List profiles on system
 `,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("profile...")
-		},
+		RunE: executeProfile,
 	}
 
 	return profileCmd
+}
+
+func executeProfile(cmd *cobra.Command, args []string) error {
+	fmt.Println("profile...")
+
+	return nil
 }

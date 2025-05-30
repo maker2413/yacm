@@ -8,3 +8,9 @@ APP = yacm
 
 build:
 	go build -o $(APP) .
+
+run:
+	go run .
+
+test:
+	go test -cover ../../...

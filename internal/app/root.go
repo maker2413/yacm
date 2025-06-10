@@ -48,6 +48,8 @@ func initConfig() {
 	viper.SetDefault("yacm_scripts_dir",
 		fmt.Sprintf("%s/scripts", viper.GetString("yacm_dir")))
 
+	fmt.Println(viper.GetString("yacm_dir"))
+
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 		err := viper.ReadInConfig()

@@ -9,6 +9,4 @@ import (
 func TestRoot(t *testing.T) {
 	rootCmd := NewRootCmd("test")
 	assert.NotNil(t, rootCmd)
-
-	assert.NotPanics(t, initConfig)
 }

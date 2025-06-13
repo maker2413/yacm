@@ -13,6 +13,8 @@ type Profiles struct {
 
 func Init() (Profiles, error) {
 	p := Profiles{}
+	p.profiles = make(map[string]SystemProfile)
+
 	err := p.loadProfiles()
 	if err != nil {
 		return Profiles{}, err
@@ -36,7 +38,7 @@ func (p *Profiles) loadProfiles() error {
 	return nil
 }
 
-func (p Profiles) GetProfiles() map[string]SystemProfile {
+func (p *Profiles) GetProfiles() map[string]SystemProfile {
 	return p.profiles
 }
 

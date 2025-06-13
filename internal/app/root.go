@@ -40,6 +40,9 @@ func initConfig() {
 	homeDir, err := os.UserHomeDir()
 	cobra.CheckErr(err)
 
+	// read in environment variables that match
+	viper.AutomaticEnv()
+
 	viper.SetDefault("yacm_base_dir", fmt.Sprintf("%s/.config", homeDir))
 	viper.SetDefault("yacm_dir",
 		fmt.Sprintf("%s/yacm", viper.GetString("yacm_base_dir")))
@@ -47,8 +50,6 @@ func initConfig() {
 		fmt.Sprintf("%s/profiles", viper.GetString("yacm_dir")))
 	viper.SetDefault("yacm_scripts_dir",
 		fmt.Sprintf("%s/scripts", viper.GetString("yacm_dir")))
-
-	fmt.Println(viper.GetString("yacm_dir"))
 
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
@@ -65,7 +66,4 @@ func initConfig() {
 			cobra.CheckErr(err)
 		}
 	}
-
-	// read in environment variables that match
-	viper.AutomaticEnv()
 }

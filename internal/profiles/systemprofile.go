@@ -1,3 +1,6 @@
 package profiles
 
-type SystemProfile struct{}
+type SystemProfile struct {
+	name     string `yaml:"name"`
+	hostname string `yaml:"hostname"`
+}

@@ -2,7 +2,18 @@
 # Be sure to place this BEFORE `include` directives, if any.
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
-.PHONY: run-all-tests
+run:
+	@go run cmd/yacm/main.go
+
+build:
+	@go build -o yacm cmd/yacm/main.go
+
+lint:
+	@golangci-lint run
+
+.PHONY: test
+test:
+	go test -cover ./...
 
 run-all-tests:
 	@$(MAKE) -f $(THIS_FILE) \

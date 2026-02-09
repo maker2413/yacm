@@ -20,16 +20,16 @@ current system init will kick off the creation of a new configuration profile.`,
 }
 
 func executeInit(cmd *cobra.Command, args []string) error {
-	p, err := profiles.Init()
+	sp, err := profiles.Init()
 	if err != nil {
 		return err
 	}
 
-	for i, profile := range p.GetProfiles() {
+	for i, profile := range sp {
 		fmt.Println(i, profile)
 	}
 
-	fmt.Println(p.Exist())
+	fmt.Println(len(sp) > 0)
 
 	return nil
 }

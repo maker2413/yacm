@@ -15,34 +15,27 @@ func TestProfiles(t *testing.T) {
 
 	viper.Set("yacm_profiles_dir", "./tests/profiles/")
 
-	p, err := Init()
+	sp, err := Init()
 	assert.NoError(t, err)
-	assert.NotNil(t, p)
+	assert.NotNil(t, sp)
 
-	t.Run("GetProfiles", func(t *testing.T) {
-		expected := make(map[string]SystemProfile)
-		expected["test.yml"] = SystemProfile{}
-
-		assert.Equal(t, expected, p.GetProfiles())
+	t.Run("exists", func(t *testing.T) {
+		assert.True(t, sp.exists())
 	})
 
-	t.Run("Exist", func(t *testing.T) {
-		assert.True(t, p.Exist())
-	})
-
-	t.Run("Exist - false", func(t *testing.T) {
+	t.Run("exists - false", func(t *testing.T) {
 		viper.Set("yacm_profiles_dir", "./tests/noprofiles/")
 
-		p2, err := Init()
+		sp2, err := Init()
 		assert.NoError(t, err)
-		assert.False(t, p2.Exist())
+		assert.False(t, sp2.exists())
 	})
 
-	t.Run("Exist - false from error", func(t *testing.T) {
+	t.Run("exists - false from error", func(t *testing.T) {
 		viper.Set("yacm_profiles_dir", "./tests/nonexistent/")
 
-		p2, err := Init()
+		sp2, err := Init()
 		assert.Error(t, err)
-		assert.False(t, p2.Exist())
+		assert.False(t, sp2.exists())
 	})
 }
